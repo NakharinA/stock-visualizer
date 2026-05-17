@@ -1,32 +1,30 @@
-import Aura from '@primevue/themes/aura'
+import Components from 'unplugin-vue-components/vite'
+import { PrimeVueResolver } from '@primevue/auto-import-resolver'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  experimental: {
-    payloadExtraction: false,
-  },
-  modules: ['@primevue/nuxt-module', '@pinia/nuxt'],
-  primevue: {
-    options: {
-      theme: {
-        preset: Aura,
-        options: {
-          darkModeSelector: '.dark',
-        },
-      },
-    },
-  },
+
+  modules: ['@pinia/nuxt'],
+
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
+      apiBase: 'http://localhost:8000',
     },
   },
-  css: ['~/assets/css/main.css', 'primeicons/primeicons.css'],
-  app: {
-    htmlAttrs: {
-      class: 'dark',
-    },
+
+  css: ['primeicons/primeicons.css', '~/assets/css/main.css'],
+
+  build: {
+    transpile: ['primevue'],
+  },
+
+  vite: {
+    plugins: [
+      Components({
+        resolvers: [PrimeVueResolver()],
+      }),
+    ],
   },
 })

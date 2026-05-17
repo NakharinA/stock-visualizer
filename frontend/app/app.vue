@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
+  <NuxtLayout>
     <NuxtPage />
-  </div>
+  </NuxtLayout>
+  <Toast position="bottom-right" />
 </template>

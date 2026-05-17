@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from database import init_db
 import os
 
 load_dotenv()
@@ -17,10 +18,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routers import stock, indicator
+from routers import stock, indicator, watchlist
 
 app.include_router(stock.router, prefix="/stock", tags=["stock"])
 app.include_router(indicator.router, prefix="/indicator", tags=["indicator"])
+app.include_router(watchlist.router, prefix="/watchlist", tags=["watchlist"])
+
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 
 @app.get("/health")

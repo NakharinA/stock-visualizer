@@ -20,6 +20,15 @@ export interface SearchResult {
   exchange: string
 }
 
+export interface WatchlistItem {
+  ticker: string
+  name: string | null
+  added_at: string
+  price: number | null
+  change: number | null
+  change_pct: number | null
+}
+
 export interface IndicatorSeries {
   name: string
   time: number[]
@@ -31,28 +40,8 @@ export interface IndicatorResponse {
   series: IndicatorSeries[]
 }
 
-export interface ActiveIndicator {
-  id: string
-  type: string
-  params: Record<string, unknown>
-  formula?: string
-  pane: 'main' | 'sub'
-  color: string
-  series: IndicatorSeries[]
-}
+export type Interval = '1m' | '5m' | '15m' | '30m' | '1h' | '1d' | '1wk' | '1mo'
+export type Period = '1d' | '5d' | '1mo' | '3mo' | '6mo' | '1y' | '2y' | '5y'
 
-export type DrawingToolType = 'none' | 'trendline' | 'hline' | 'fvgbox' | 'freehand'
-
-export interface DrawingPoint {
-  time: number
-  price: number
-}
-
-export interface Drawing {
-  id: string
-  tool: DrawingToolType
-  points: DrawingPoint[]
-  color: string
-  opacity: number
-  lineWidth: number
-}
+export type IndicatorType = 'RSI' | 'STOCHRSI' | 'MACD' | 'ZSCORE' | 'VOLUME'
+export type EmaLength = 20 | 50 | 100 | 200

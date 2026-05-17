@@ -52,3 +52,24 @@ class IndicatorSeries(BaseModel):
 class IndicatorResponse(BaseModel):
     type: str
     series: list[IndicatorSeries]
+
+
+class WatchlistAddRequest(BaseModel):
+    ticker: str
+    name: str | None = None
+
+
+class WatchlistItemResponse(BaseModel):
+    ticker: str
+    name: str | None
+    added_at: str
+    price: float | None = None
+    change: float | None = None
+    change_pct: float | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class WatchlistResponse(BaseModel):
+    items: list[WatchlistItemResponse]

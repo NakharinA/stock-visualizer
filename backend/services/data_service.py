@@ -40,3 +40,17 @@ def search_tickers(query: str) -> list[dict]:
             "exchange": q.get("exchange", ""),
         })
     return results
+
+
+def fetch_quote_info(ticker: str) -> dict:
+    """Fetch basic quote info: price, change, change_pct."""
+    try:
+        t = yf.Ticker(ticker)
+        info = t.fast_info
+        price = float(info.last_price) if info.last_price else None
+        prev_close = float(info.previous_close) if info.previous_close else None
+        change = round(price - prev_close, 4) if price and prev_close else None
+        change_pct = round((change / prev_close) * 100, 2) if change and prev_close else None
+        return {"price": price, "change": change, "change_pct": change_pct}
+    except Exception:
+        return {"price": None, "change": None, "change_pct": None}
