@@ -2,7 +2,8 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    '@vueuse/nuxt'
   ],
 
   devtools: {
@@ -12,10 +13,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   routeRules: {
-    '/': { prerender: true }
+    '/api/**': {
+      cors: true
+    }
   },
 
-  compatibilityDate: '2025-01-15',
+  compatibilityDate: '2024-07-11',
 
   eslint: {
     config: {
