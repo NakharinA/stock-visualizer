@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "nuxt": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/nuxt/SKILL.md",
+      "computedHash": "6f5456948b35c0c0005424098eaf28ebbba1bbd92a3f3268466fe7d85e9e3789"
+    },
+    "primevue": {
+      "source": "kindy/skills",
+      "sourceType": "github",
+      "skillPath": "primevue/SKILL.md",
+      "computedHash": "449d7e02adbd5cdad8db5b04cfe6d00a45669dddbe65ab683fcbbd8b51fecb15"
+    }
+  }
+}
