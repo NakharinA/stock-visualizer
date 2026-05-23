@@ -1,0 +1,49 @@
+<template>
+  <div
+    class="flex flex-col h-full bg-[#161b22] border-r border-[#30363d] transition-all duration-200 shrink-0"
+    :class="collapsed ? 'w-12' : 'w-52'"
+  >
+    <!-- Header -->
+    <div class="flex items-center h-10 px-2 border-b border-[#30363d]" :class="collapsed ? 'justify-center' : 'justify-between'">
+      <span v-if="!collapsed" class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider pl-1">Watchlist</span>
+      <UButton
+        variant="ghost"
+        color="neutral"
+        :icon="collapsed ? 'i-lucide-chevrons-right' : 'i-lucide-chevrons-left'"
+        size="xs"
+        @click="collapsed = !collapsed"
+      />
+    </div>
+
+    <!-- List -->
+    <div class="flex-1 overflow-y-auto py-1">
+      <WatchlistItem
+        v-for="stock in watchlistStore.watchlist"
+        :key="stock.sym"
+        :stock="stock"
+        :collapsed="collapsed"
+        :focused="watchlistStore.focusedSym === stock.sym"
+        @click="watchlistStore.setFocused(stock.sym)"
+      />
+    </div>
+
+    <!-- Add stock button -->
+    <div class="p-2 border-t border-[#30363d]">
+      <button
+        class="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-[#30363d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] transition-colors py-2 text-xs"
+        @click="searchOpen = true"
+      >
+        <UIcon name="i-lucide-plus" class="w-4 h-4" />
+        <span v-if="!collapsed">Add stock</span>
+      </button>
+    </div>
+
+    <StockSearchModal v-model:open="searchOpen" />
+  </div>
+</template>
+
+<script setup lang="ts">
+const collapsed = ref(false)
+const searchOpen = ref(false)
+const watchlistStore = useWatchlistStore()
+</script>

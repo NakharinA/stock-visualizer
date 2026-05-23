@@ -10,8 +10,14 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/ui": "^4.8.0",
+    "@pinia/nuxt": "^0.11.3",
+    "apexcharts": "^5.13.0",
+    "lightweight-charts": "^5.2.0",
     "nuxt": "^4.4.6",
+    "pinia": "^3.0.4",
     "vue": "^3.5.34",
-    "vue-router": "^5.0.7"
+    "vue-router": "^5.0.7",
+    "vue3-apexcharts": "^1.11.1"
   }
 }
