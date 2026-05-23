@@ -1,6 +1,6 @@
 <template>
   <div class="w-full max-w-sm">
-    <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-8 space-y-6 shadow-2xl">
+    <div class="bg-elevated border border-default rounded-xl p-8 space-y-6 shadow-2xl">
       <!-- Logo / title -->
       <div class="text-center space-y-1">
         <div class="flex justify-center mb-3">
@@ -8,8 +8,8 @@
             <UIcon name="i-lucide-candlestick-chart" class="w-6 h-6 text-white" />
           </div>
         </div>
-        <h1 class="text-xl font-semibold text-[#e6edf3]">StockViz</h1>
-        <p class="text-sm text-[#8b949e]">Sign in to your account</p>
+        <h1 class="text-xl font-semibold text-highlighted">StockViz</h1>
+        <p class="text-sm text-muted">Sign in to your account</p>
       </div>
 
       <!-- Form -->
@@ -48,9 +48,9 @@
 
       <!-- Divider -->
       <div class="flex items-center gap-3">
-        <div class="flex-1 h-px bg-[#30363d]" />
-        <span class="text-xs text-[#8b949e]">or</span>
-        <div class="flex-1 h-px bg-[#30363d]" />
+        <div class="flex-1 h-px bg-muted" />
+        <span class="text-xs text-muted">or</span>
+        <div class="flex-1 h-px bg-muted" />
       </div>
 
       <!-- Google OAuth -->

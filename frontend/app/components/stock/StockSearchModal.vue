@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" title="Add Stock" :ui="{ content: 'bg-[#161b22] border border-[#30363d]' }">
+  <UModal v-model:open="open" title="Add Stock" :ui="{ content: 'bg-elevated border border-default' }">
     <template #body>
       <div class="space-y-4">
         <UInput

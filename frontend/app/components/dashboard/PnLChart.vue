@@ -41,17 +41,17 @@ const chartOptions = computed(() => ({
   dataLabels: { enabled: false },
   xaxis: {
     categories: pnlData.map(d => d.x),
-    labels: { style: { colors: '#8b949e' } },
+    labels: { style: { colors: isDark.value ? '#8b949e' : '#57606a' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
   yaxis: {
     labels: {
-      style: { colors: '#8b949e' },
+      style: { colors: isDark.value ? '#8b949e' : '#57606a' },
       formatter: (v: number) => `$${v}`,
     },
   },
-  grid: { borderColor: '#30363d', strokeDashArray: 4 },
+  grid: { borderColor: isDark.value ? '#30363d' : '#d0d7de', strokeDashArray: 4 },
   tooltip: { theme: isDark.value ? 'dark' : 'light' },
 }))
 

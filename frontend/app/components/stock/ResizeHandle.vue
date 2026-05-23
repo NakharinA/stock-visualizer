@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-1 bg-[#30363d] hover:bg-[#58a6ff] cursor-ns-resize transition-colors shrink-0"
+    class="h-1 bg-muted hover:bg-primary cursor-ns-resize transition-colors shrink-0"
     @mousedown="startDrag"
   />
 </template>

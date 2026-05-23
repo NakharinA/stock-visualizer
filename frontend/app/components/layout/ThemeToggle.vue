@@ -8,7 +8,7 @@
     :class="collapsed ? 'w-full justify-center' : 'w-full justify-start px-2'"
     @click="toggleTheme"
   >
-    <span v-if="!collapsed" class="text-sm text-[#8b949e]">{{ isDark ? 'Light mode' : 'Dark mode' }}</span>
+    <span v-if="!collapsed" class="text-sm text-muted">{{ isDark ? 'Light mode' : 'Dark mode' }}</span>
   </UButton>
 </template>
 

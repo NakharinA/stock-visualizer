@@ -1,19 +1,19 @@
 <template>
-  <div class="flex flex-col h-full bg-[#0d1117]">
+  <div class="flex flex-col h-full bg-default">
     <!-- Tabs bar -->
-    <div class="flex items-center gap-1 px-2 h-8 bg-[#161b22] border-b border-[#30363d] shrink-0">
+    <div class="flex items-center gap-1 px-2 h-8 bg-elevated border-b border-default shrink-0">
       <button
         v-for="id in indicatorStore.paneIndicators"
         :key="id"
         class="flex items-center gap-1.5 px-3 py-1 rounded-t text-xs transition-colors"
         :class="indicatorStore.activeTab === id
-          ? 'bg-[#0d1117] text-[#e6edf3] border-t border-x border-[#30363d]'
-          : 'text-[#8b949e] hover:text-[#e6edf3]'"
+          ? 'bg-default text-highlighted border-t border-x border-default'
+          : 'text-muted hover:text-highlighted'"
         @click="indicatorStore.setActiveTab(id)"
       >
         {{ labelFor(id) }}
         <span
-          class="ml-0.5 text-[#8b949e] hover:text-[#f85149]"
+          class="ml-0.5 text-muted hover:text-error"
           @click.stop="indicatorStore.removePane(id)"
         >✕</span>
       </button>

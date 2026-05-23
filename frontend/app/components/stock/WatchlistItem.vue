@@ -1,8 +1,8 @@
 <template>
   <button
-    class="w-full flex items-center gap-2 px-2 py-2 border-l-2 transition-colors text-left hover:bg-[#21262d]"
+    class="w-full flex items-center gap-2 px-2 py-2 border-l-2 transition-colors text-left hover:bg-muted"
     :class="focused
-      ? 'border-[#58a6ff] bg-[#21262d]'
+      ? 'border-primary bg-muted'
       : 'border-transparent'"
     @click="$emit('click')"
   >
@@ -13,11 +13,11 @@
 
     <template v-if="!collapsed">
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-semibold text-[#e6edf3] truncate">{{ stock.sym }}</p>
-        <p class="text-[10px] text-[#8b949e] truncate">{{ stock.name }}</p>
+        <p class="text-xs font-semibold text-highlighted truncate">{{ stock.sym }}</p>
+        <p class="text-[10px] text-muted truncate">{{ stock.name }}</p>
       </div>
       <div class="text-right shrink-0">
-        <p class="text-xs text-[#e6edf3]">${{ stock.price.toFixed(2) }}</p>
+        <p class="text-xs text-highlighted">${{ stock.price.toFixed(2) }}</p>
         <p class="text-[10px]" :class="stock.change >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'">
           {{ stock.change >= 0 ? '+' : '' }}{{ stock.changePct.toFixed(2) }}%
         </p>

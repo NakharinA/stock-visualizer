@@ -15,8 +15,14 @@ import type { PaneIndicatorId } from '~/stores/useIndicatorStore'
 const props = defineProps<{ indicatorId: PaneIndicatorId }>()
 const el = ref<HTMLElement | null>(null)
 const chartStore = useChartStore()
+const colorMode = useColorMode()
+const isDark = computed(() => colorMode.value === 'dark')
 
 let chart: IChartApi | null = null
+
+const DARK = { bg: '#0d1117', grid: '#21262d', text: '#8b949e', border: '#30363d' }
+const LIGHT = { bg: '#ffffff', grid: '#e5e7eb', text: '#57606a', border: '#d0d7de' }
+const THEME = computed(() => isDark.value ? DARK : LIGHT)
 
 const COLORS: Record<PaneIndicatorId, string> = {
   RSI: '#f0883e',
@@ -112,16 +118,16 @@ onMounted(() => {
   if (!el.value) return
   chart = createChart(el.value, {
     layout: {
-      background: { type: ColorType.Solid, color: '#0d1117' },
-      textColor: '#8b949e',
+      background: { type: ColorType.Solid, color: THEME.value.bg },
+      textColor: THEME.value.text,
     },
     grid: {
-      vertLines: { color: '#21262d' },
-      horzLines: { color: '#21262d' },
+      vertLines: { color: THEME.value.grid },
+      horzLines: { color: THEME.value.grid },
     },
     crosshair: { mode: CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#30363d' },
-    timeScale: { borderColor: '#30363d', timeVisible: true },
+    rightPriceScale: { borderColor: THEME.value.border },
+    timeScale: { borderColor: THEME.value.border, timeVisible: true },
   })
 
   const ro = new ResizeObserver(() => {
@@ -136,4 +142,20 @@ onMounted(() => {
 })
 
 watch(() => chartStore.candleData.length, buildSeries)
+watch(isDark, () => {
+  if (!chart) return
+  const t = THEME.value
+  chart.applyOptions({
+    layout: {
+      background: { type: ColorType.Solid, color: t.bg },
+      textColor: t.text,
+    },
+    grid: {
+      vertLines: { color: t.grid },
+      horzLines: { color: t.grid },
+    },
+    rightPriceScale: { borderColor: t.border },
+    timeScale: { borderColor: t.border },
+  })
+})
 </script>

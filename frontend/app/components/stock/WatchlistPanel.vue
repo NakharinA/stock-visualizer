@@ -1,11 +1,11 @@
 <template>
   <div
-    class="flex flex-col h-full bg-[#161b22] border-r border-[#30363d] transition-all duration-200 shrink-0"
+    class="flex flex-col h-full bg-elevated border-r border-default transition-all duration-200 shrink-0"
     :class="collapsed ? 'w-12' : 'w-52'"
   >
     <!-- Header -->
-    <div class="flex items-center h-10 px-2 border-b border-[#30363d]" :class="collapsed ? 'justify-center' : 'justify-between'">
-      <span v-if="!collapsed" class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider pl-1">Watchlist</span>
+    <div class="flex items-center h-10 px-2 border-b border-default" :class="collapsed ? 'justify-center' : 'justify-between'">
+      <span v-if="!collapsed" class="text-xs font-semibold text-muted uppercase tracking-wider pl-1">Watchlist</span>
       <UButton
         variant="ghost"
         color="neutral"
@@ -28,9 +28,9 @@
     </div>
 
     <!-- Add stock button -->
-    <div class="p-2 border-t border-[#30363d]">
+    <div class="p-2 border-t border-default">
       <button
-        class="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-[#30363d] text-[#8b949e] hover:text-[#58a6ff] hover:border-[#58a6ff] transition-colors py-2 text-xs"
+        class="w-full flex items-center justify-center gap-2 rounded-md border border-dashed border-default text-muted hover:text-primary hover:border-primary transition-colors py-2 text-xs"
         @click="searchOpen = true"
       >
         <UIcon name="i-lucide-plus" class="w-4 h-4" />

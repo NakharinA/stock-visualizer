@@ -1,13 +1,13 @@
 <template>
   <nav
     :class="[
-      'flex flex-col h-screen bg-[#161b22] border-r border-[#30363d] transition-all duration-200 shrink-0',
+      'flex flex-col h-screen bg-elevated border-r border-default transition-all duration-200 shrink-0',
       collapsed ? 'w-12' : 'w-48',
     ]"
   >
     <!-- Header / toggle -->
-    <div class="flex items-center h-12 px-2 border-b border-[#30363d]" :class="collapsed ? 'justify-center' : 'justify-between'">
-      <span v-if="!collapsed" class="text-[#e6edf3] font-semibold text-sm truncate pl-1">StockViz</span>
+    <div class="flex items-center h-12 px-2 border-b border-default" :class="collapsed ? 'justify-center' : 'justify-between'">
+      <span v-if="!collapsed" class="text-highlighted font-semibold text-sm truncate pl-1">StockViz</span>
       <UButton
         variant="ghost"
         color="neutral"
@@ -23,8 +23,8 @@
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        class="flex items-center gap-3 px-2 py-2 rounded-md text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] transition-colors"
-        :class="{ '!text-[#58a6ff] bg-[#21262d]': $route.path.startsWith(item.to) }"
+        class="flex items-center gap-3 px-2 py-2 rounded-md text-muted hover:text-highlighted hover:bg-muted transition-colors"
+        :class="{ '!text-primary bg-muted': $route.path.startsWith(item.to) }"
         :title="collapsed ? item.label : undefined"
       >
         <UIcon :name="item.icon" class="w-4 h-4 shrink-0" />
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Bottom: theme toggle + user -->
-    <div class="border-t border-[#30363d] pb-2 pt-2 px-1 space-y-1">
+    <div class="border-t border-default pb-2 pt-2 px-1 space-y-1">
       <ThemeToggle :collapsed="collapsed" />
       <NavbarUser :collapsed="collapsed" />
     </div>

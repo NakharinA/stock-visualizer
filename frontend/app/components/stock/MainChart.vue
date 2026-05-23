@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartContainer" class="w-full h-full bg-[#0d1117]" />
+  <div ref="chartContainer" class="w-full h-full bg-default" />
 </template>
 
 <script setup lang="ts">
@@ -20,12 +20,14 @@ const watchlistStore = useWatchlistStore()
 const indicatorStore = useIndicatorStore()
 const chartStore = useChartStore()
 const { getCandles } = useStockApi()
+const colorMode = useColorMode()
+const isDark = computed(() => colorMode.value === 'dark')
 
 let chart: IChartApi | null = null
 let candleSeries: ISeriesApi<'Candlestick'> | null = null
 const overlaySeries = new Map<string, ISeriesApi<keyof SeriesOptionsMap>>()
 
-const CHART_COLORS = {
+const DARK_COLORS = {
   bg: '#0d1117',
   grid: '#21262d',
   text: '#8b949e',
@@ -34,31 +36,42 @@ const CHART_COLORS = {
   down: '#f85149',
 }
 
+const LIGHT_COLORS = {
+  bg: '#ffffff',
+  grid: '#e5e7eb',
+  text: '#57606a',
+  border: '#d0d7de',
+  up: '#2da44e',
+  down: '#cf222e',
+}
+
+const CHART_COLORS = computed(() => isDark.value ? DARK_COLORS : LIGHT_COLORS)
+
 function initChart() {
   if (!chartContainer.value) return
   chart = createChart(chartContainer.value, {
     layout: {
-      background: { type: ColorType.Solid, color: CHART_COLORS.bg },
-      textColor: CHART_COLORS.text,
+      background: { type: ColorType.Solid, color: CHART_COLORS.value.bg },
+      textColor: CHART_COLORS.value.text,
     },
     grid: {
-      vertLines: { color: CHART_COLORS.grid },
-      horzLines: { color: CHART_COLORS.grid },
+      vertLines: { color: CHART_COLORS.value.grid },
+      horzLines: { color: CHART_COLORS.value.grid },
     },
     crosshair: { mode: CrosshairMode.Normal },
-    rightPriceScale: { borderColor: CHART_COLORS.border },
-    timeScale: { borderColor: CHART_COLORS.border, timeVisible: true },
+    rightPriceScale: { borderColor: CHART_COLORS.value.border },
+    timeScale: { borderColor: CHART_COLORS.value.border, timeVisible: true },
     handleScroll: true,
     handleScale: true,
   })
 
   candleSeries = chart.addSeries(CandlestickSeries, {
-    upColor: CHART_COLORS.up,
-    downColor: CHART_COLORS.down,
-    borderUpColor: CHART_COLORS.up,
-    borderDownColor: CHART_COLORS.down,
-    wickUpColor: CHART_COLORS.up,
-    wickDownColor: CHART_COLORS.down,
+    upColor: CHART_COLORS.value.up,
+    downColor: CHART_COLORS.value.down,
+    borderUpColor: CHART_COLORS.value.up,
+    borderDownColor: CHART_COLORS.value.down,
+    wickUpColor: CHART_COLORS.value.up,
+    wickDownColor: CHART_COLORS.value.down,
   })
 
   // Resize observer
@@ -197,4 +210,28 @@ onMounted(() => {
 watch(() => watchlistStore.focusedSym, loadCandles)
 watch(() => chartStore.timeframe, loadCandles)
 watch(() => [...indicatorStore.overlayIndicators], syncOverlays, { deep: true })
+watch(isDark, () => {
+  if (!chart) return
+  const c = CHART_COLORS.value
+  chart.applyOptions({
+    layout: {
+      background: { type: ColorType.Solid, color: c.bg },
+      textColor: c.text,
+    },
+    grid: {
+      vertLines: { color: c.grid },
+      horzLines: { color: c.grid },
+    },
+    rightPriceScale: { borderColor: c.border },
+    timeScale: { borderColor: c.border },
+  })
+  candleSeries?.applyOptions({
+    upColor: c.up,
+    downColor: c.down,
+    borderUpColor: c.up,
+    borderDownColor: c.down,
+    wickUpColor: c.up,
+    wickDownColor: c.down,
+  })
+})
 </script>

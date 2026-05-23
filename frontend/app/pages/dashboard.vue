@@ -3,15 +3,15 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-semibold text-[#e6edf3]">Dashboard</h1>
-        <p class="text-sm text-[#8b949e] mt-0.5">Portfolio overview &amp; performance</p>
+        <h1 class="text-xl font-semibold text-highlighted">Dashboard</h1>
+        <p class="text-sm text-muted mt-0.5">Portfolio overview &amp; performance</p>
       </div>
     </div>
 
     <!-- PnL Chart -->
-    <UCard class="bg-[#161b22] border-[#30363d]">
+    <UCard>
       <template #header>
-        <p class="text-sm font-medium text-[#8b949e]">Profit &amp; Loss — Last 7 Days</p>
+        <p class="text-sm font-medium text-muted">Profit &amp; Loss — Last 7 Days</p>
       </template>
       <PnLChart />
     </UCard>
@@ -35,16 +35,16 @@
 
     <!-- Detail cards row -->
     <div class="grid grid-cols-2 gap-4">
-      <UCard class="bg-[#161b22] border-[#30363d]">
+      <UCard>
         <template #header>
-          <p class="text-sm font-medium text-[#8b949e]">Detail Card 1</p>
+          <p class="text-sm font-medium text-muted">Detail Card 1</p>
         </template>
-        <p class="text-[#8b949e] text-sm">Reserved</p>
+        <p class="text-muted text-sm">Reserved</p>
       </UCard>
 
-      <UCard class="bg-[#161b22] border-[#30363d]">
+      <UCard>
         <template #header>
-          <p class="text-sm font-medium text-[#8b949e]">Focusing Stock Info</p>
+          <p class="text-sm font-medium text-muted">Focusing Stock Info</p>
         </template>
         <FocusStockTable />
       </UCard>

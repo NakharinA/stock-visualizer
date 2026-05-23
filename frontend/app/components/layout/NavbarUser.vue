@@ -7,8 +7,8 @@
     />
     <template v-if="!collapsed">
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-[#e6edf3] truncate">{{ authStore.user?.name }}</p>
-        <p class="text-xs text-[#8b949e] truncate">{{ authStore.user?.email }}</p>
+        <p class="text-xs text-highlighted truncate">{{ authStore.user?.name }}</p>
+        <p class="text-xs text-muted truncate">{{ authStore.user?.email }}</p>
       </div>
       <UButton
         variant="ghost"

@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col h-full overflow-hidden">
     <!-- Page Header -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-[#30363d] shrink-0">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-default shrink-0">
       <div>
-        <h1 class="text-base font-semibold text-[#e6edf3] leading-tight">
+        <h1 class="text-base font-semibold text-highlighted leading-tight">
           {{ watchlistStore.focusedSym || 'Chart' }}
         </h1>
-        <p class="text-xs text-[#8b949e]">Live Chart</p>
+        <p class="text-xs text-muted">Live Chart</p>
       </div>
     </div>
 
