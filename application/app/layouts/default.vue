@@ -14,10 +14,23 @@ const links = [[{
     open.value = false
   }
 }, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/inbox',
-  badge: '4',
+  label: 'Dashboard',
+  icon: 'i-lucide-layout-dashboard',
+  to: '/dashboard',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Stock',
+  icon: 'i-lucide-trending-up',
+  to: '/stock',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Indicators',
+  icon: 'i-lucide-bar-chart-2',
+  to: '/indicators',
   onSelect: () => {
     open.value = false
   }
@@ -60,16 +73,6 @@ const links = [[{
       open.value = false
     }
   }]
-}], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
 }]] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
@@ -125,12 +128,18 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+        <div class="flex items-center gap-2 px-3 py-2">
+          <UIcon
+            name="i-lucide-trending-up"
+            class="text-primary size-6 shrink-0"
+          />
+          <span v-if="!collapsed" class="font-bold text-lg tracking-tight"
+            >StockViz</span
+          >
+        </div>
       </template>
 
       <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
-
         <UNavigationMenu
           :collapsed="collapsed"
           :items="links[0]"
@@ -138,22 +147,12 @@ onMounted(async () => {
           tooltip
           popover
         />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
       </template>
 
       <template #footer="{ collapsed }">
         <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
-
-    <UDashboardSearch :groups="groups" />
 
     <slot />
 
