@@ -6,8 +6,11 @@ interface User {
   avatar?: string
 }
 
+const AUTH_KEY = 'stockviz-auth-user'
+
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<User | null>(null)
+  const stored = import.meta.client ? localStorage.getItem(AUTH_KEY) : null
+  const user = ref<User | null>(stored ? JSON.parse(stored) : null)
   const isAuthenticated = computed(() => !!user.value)
 
   function login(email: string, _password: string) {
@@ -16,11 +19,13 @@ export const useAuthStore = defineStore('auth', () => {
       email,
       avatar: undefined,
     }
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user.value))
   }
 
   function logout() {
     user.value = null
+    localStorage.removeItem(AUTH_KEY)
   }
 
   return { user, isAuthenticated, login, logout }
-}, { persist: true })
+})

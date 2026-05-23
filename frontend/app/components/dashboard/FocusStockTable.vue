@@ -10,10 +10,10 @@
 const watchlistStore = useWatchlistStore()
 
 const columns = [
-  { key: 'sym', label: 'Symbol' },
-  { key: 'price', label: 'Last Price' },
-  { key: 'change', label: 'Change' },
-  { key: 'changePct', label: 'Change %' },
+  { accessorKey: 'sym', header: 'Symbol' },
+  { accessorKey: 'price', header: 'Last Price' },
+  { accessorKey: 'change', header: 'Change' },
+  { accessorKey: 'changePct', header: 'Change %' },
 ]
 
 const rows = computed(() =>

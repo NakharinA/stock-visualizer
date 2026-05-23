@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-const collapsed = ref(false)
+const collapsed = ref(true)
 const searchOpen = ref(false)
 const watchlistStore = useWatchlistStore()
 </script>

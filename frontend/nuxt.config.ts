@@ -7,8 +7,13 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@pinia/nuxt',
   ],
+  components: {
+    dirs: [
+      { path: '~/components', pathPrefix: false },
+    ],
+  },
   colorMode: {
     preference: 'dark',
   },
-  css: [],
+  css: ['~/assets/css/main.css'],
 })

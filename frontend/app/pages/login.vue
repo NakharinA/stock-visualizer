@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#0d1117] flex items-center justify-center p-4">
-    <LoginCard />
+    <AuthLoginCard />
   </div>
 </template>
 
