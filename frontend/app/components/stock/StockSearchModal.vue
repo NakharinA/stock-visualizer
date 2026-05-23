@@ -3,6 +3,7 @@
     <template #body>
       <div class="space-y-4">
         <UInput
+          class="w-full"
           v-model="query"
           placeholder="Search by symbol or company name…"
           icon="i-lucide-search"
@@ -17,12 +18,13 @@
             <template #action-cell="{ row }">
               <UButton
                 size="xs"
-                :disabled="isAdded(row.sym)"
-                :color="isAdded(row.sym) ? 'neutral' : 'primary'"
-                :variant="isAdded(row.sym) ? 'subtle' : 'solid'"
-                @click="addStock(row)"
+                class="w-full"
+                :disabled="isAdded(row.original.sym)"
+                :color="isAdded(row.original.sym) ? 'neutral' : 'primary'"
+                :variant="isAdded(row.original.sym) ? 'subtle' : 'solid'"
+                @click="addStock(row.original)"
               >
-                {{ isAdded(row.sym) ? 'Added' : 'Add' }}
+                {{ isAdded(row.original.sym) ? 'Added' : 'Add' }}
               </UButton>
             </template>
           </UTable>
@@ -61,11 +63,11 @@ const filteredResults = computed(() => {
 })
 
 const columns = [
-  { key: 'sym', label: 'Symbol' },
-  { key: 'name', label: 'Company' },
-  { key: 'exchange', label: 'Exchange' },
-  { key: 'sector', label: 'Sector' },
-  { key: 'action', label: '' },
+  { accessorKey: 'sym', header: 'Symbol' },
+  { accessorKey: 'name', header: 'Company' },
+  { accessorKey: 'exchange', header: 'Exchange' },
+  { accessorKey: 'sector', header: 'Sector' },
+  { id: 'action', header: '' },
 ]
 
 function isAdded(sym: string) {

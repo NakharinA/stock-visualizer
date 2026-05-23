@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import {
   createChart,
+  LineSeries,
   type IChartApi,
   ColorType,
   CrosshairMode,
@@ -32,18 +33,18 @@ function buildSeries() {
 
   if (props.indicatorId === 'RSI') {
     const rsiData = calcRSI(data, 14)
-    const s = chart.addLineSeries({ color: COLORS.RSI, lineWidth: 1, priceLineVisible: false })
+    const s = chart.addSeries(LineSeries, { color: COLORS.RSI, lineWidth: 1, priceLineVisible: false })
     s.setData(rsiData)
   } else if (props.indicatorId === 'MACD') {
     const { macd, signal } = calcMACD(data)
-    chart.addLineSeries({ color: '#58a6ff', lineWidth: 1, priceLineVisible: false }).setData(macd)
-    chart.addLineSeries({ color: '#f85149', lineWidth: 1, priceLineVisible: false }).setData(signal)
+    chart.addSeries(LineSeries, { color: '#58a6ff', lineWidth: 1, priceLineVisible: false }).setData(macd)
+    chart.addSeries(LineSeries, { color: '#f85149', lineWidth: 1, priceLineVisible: false }).setData(signal)
   } else if (props.indicatorId === 'STOCH') {
     const stoch = calcStoch(data, 14)
-    chart.addLineSeries({ color: COLORS.STOCH, lineWidth: 1, priceLineVisible: false }).setData(stoch)
+    chart.addSeries(LineSeries, { color: COLORS.STOCH, lineWidth: 1, priceLineVisible: false }).setData(stoch)
   } else if (props.indicatorId === 'CCI') {
     const cci = calcCCI(data, 20)
-    chart.addLineSeries({ color: COLORS.CCI, lineWidth: 1, priceLineVisible: false }).setData(cci)
+    chart.addSeries(LineSeries, { color: COLORS.CCI, lineWidth: 1, priceLineVisible: false }).setData(cci)
   }
 
   chart?.timeScale().fitContent()

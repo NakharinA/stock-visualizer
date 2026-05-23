@@ -38,7 +38,7 @@
       </button>
     </div>
 
-    <StockSearchModal v-model:open="searchOpen" />
+    <StockSearchModal v-if="searchOpen" v-model:open="searchOpen" />
   </div>
 </template>
 

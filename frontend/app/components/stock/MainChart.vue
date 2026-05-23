@@ -5,9 +5,11 @@
 <script setup lang="ts">
 import {
   createChart,
+  CandlestickSeries,
+  LineSeries,
+  HistogramSeries,
   type IChartApi,
   type ISeriesApi,
-  type CandlestickSeriesOptions,
   type SeriesOptionsMap,
   ColorType,
   CrosshairMode,
@@ -50,7 +52,7 @@ function initChart() {
     handleScale: true,
   })
 
-  candleSeries = chart.addCandlestickSeries({
+  candleSeries = chart.addSeries(CandlestickSeries, {
     upColor: CHART_COLORS.up,
     downColor: CHART_COLORS.down,
     borderUpColor: CHART_COLORS.up,
@@ -115,7 +117,7 @@ function syncOverlays() {
     if (overlaySeries.has(id)) continue
 
     if (id === 'VOLUME') {
-      const s = chart.addHistogramSeries({
+      const s = chart.addSeries(HistogramSeries, {
         color: '#58a6ff',
         priceFormat: { type: 'volume' },
         priceScaleId: 'volume',
@@ -131,7 +133,7 @@ function syncOverlays() {
       overlaySeries.set(id, s as any)
     } else if (id === 'EMA20' || id === 'EMA50') {
       const period = id === 'EMA20' ? 20 : 50
-      const s = chart.addLineSeries({
+      const s = chart.addSeries(LineSeries, {
         color: id === 'EMA20' ? '#f0883e' : '#58a6ff',
         lineWidth: 1,
         priceLineVisible: false,
@@ -141,7 +143,7 @@ function syncOverlays() {
     } else if (id === 'BB') {
       const bb = calcBB(data, 20)
       for (const [key, color] of [['upper', '#8b949e'], ['middle', '#58a6ff'], ['lower', '#8b949e']] as const) {
-        const s = chart.addLineSeries({ color, lineWidth: 1, priceLineVisible: false, lineStyle: key === 'middle' ? 0 : 2 })
+        const s = chart.addSeries(LineSeries, { color, lineWidth: 1, priceLineVisible: false, lineStyle: key === 'middle' ? 0 : 2 })
         s.setData(bb[key])
         overlaySeries.set(`${id}_${key}`, s as any)
       }
