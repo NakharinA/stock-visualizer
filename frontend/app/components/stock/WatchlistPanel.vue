@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col h-full bg-elevated border-r border-default transition-all duration-200 shrink-0"
+    class="flex flex-col h-full bg-default border-r border-default transition-all duration-200 shrink-0"
     :class="collapsed ? 'w-12' : 'w-52'"
   >
     <!-- Header -->

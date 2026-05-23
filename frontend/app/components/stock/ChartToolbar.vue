@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center gap-3 h-10 px-4 bg-elevated border-b border-default shrink-0">
+  <div class="flex items-center gap-3 h-10 px-4 bg-default border-b border-default shrink-0">
     <!-- Ticker badge -->
     <div class="flex items-center gap-2">
       <span class="text-xs font-bold text-white bg-[#58a6ff] px-2 py-0.5 rounded">

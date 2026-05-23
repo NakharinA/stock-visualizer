@@ -1,14 +1,5 @@
 <template>
   <div class="flex flex-col h-full overflow-hidden">
-    <!-- Page Header -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-default shrink-0">
-      <div>
-        <h1 class="text-base font-semibold text-highlighted leading-tight">
-          {{ watchlistStore.focusedSym || 'Chart' }}
-        </h1>
-        <p class="text-xs text-muted">Live Chart</p>
-      </div>
-    </div>
 
     <!-- Content -->
     <div class="flex flex-1 overflow-hidden">
@@ -16,7 +7,7 @@
     <WatchlistPanel />
 
     <!-- Right: Chart Area -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden bg-default">
       <ChartToolbar @open-indicators="indicatorOpen = true" />
       <IndicatorModal v-model:open="indicatorOpen" />
 
