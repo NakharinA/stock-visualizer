@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-const collapsed = ref(true)
+const collapsed = ref(false)
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },

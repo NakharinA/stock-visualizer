@@ -1,5 +1,13 @@
 <template>
   <div class="p-6 space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-semibold text-[#e6edf3]">Dashboard</h1>
+        <p class="text-sm text-[#8b949e] mt-0.5">Portfolio overview &amp; performance</p>
+      </div>
+    </div>
+
     <!-- PnL Chart -->
     <UCard class="bg-[#161b22] border-[#30363d]">
       <template #header>
