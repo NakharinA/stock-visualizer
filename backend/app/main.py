@@ -19,7 +19,19 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Trading API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Stock Visualizer API",
+    version="1.0.0",
+    description=(
+        "REST API for the Stock Visualizer application.\n\n"
+        "## Authentication\n"
+        "Most endpoints require a Bearer token obtained from `POST /auth/login`.\n"
+        "Click **Authorize** (🔒) and enter the token value only (without the `Bearer ` prefix)."
+    ),
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
 
 _cors_origins = settings.cors_origins_list
 app.add_middleware(
