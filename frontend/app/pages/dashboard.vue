@@ -79,9 +79,11 @@ function formatPnl(val: number) {
 }
 
 onMounted(async () => {
+  const watchlistStore = useWatchlistStore()
   const [pnlRes, statsRes] = await Promise.allSettled([
     stockApi.getPortfolioPnl('7d'),
     stockApi.getPortfolioStats(),
+    watchlistStore.fetchWatchlist(),
   ])
 
   if (pnlRes.status === 'fulfilled') {

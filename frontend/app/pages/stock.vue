@@ -36,4 +36,8 @@ const watchlistStore = useWatchlistStore()
 const indicatorStore = useIndicatorStore()
 const paneHeight = ref(160)
 const indicatorOpen = ref(false)
+
+onMounted(() => {
+  watchlistStore.fetchWatchlist()
+})
 </script>

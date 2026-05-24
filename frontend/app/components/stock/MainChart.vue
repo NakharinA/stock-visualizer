@@ -204,10 +204,15 @@ function calcBB(data: typeof chartStore.candleData, period: number) {
 
 onMounted(() => {
   initChart()
-  loadCandles()
+  // Only load if a symbol is already focused; otherwise wait for the watcher
+  if (watchlistStore.focusedSym) {
+    loadCandles()
+  }
 })
 
-watch(() => watchlistStore.focusedSym, loadCandles)
+watch(() => watchlistStore.focusedSym, (sym) => {
+  if (sym) loadCandles()
+})
 watch(() => chartStore.timeframe, loadCandles)
 watch(() => [...indicatorStore.overlayIndicators], syncOverlays, { deep: true })
 watch(isDark, () => {

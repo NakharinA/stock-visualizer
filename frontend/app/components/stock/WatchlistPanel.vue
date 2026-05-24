@@ -24,6 +24,7 @@
         :collapsed="collapsed"
         :focused="watchlistStore.focusedSym === stock.sym"
         @click="watchlistStore.setFocused(stock.sym)"
+        @remove="watchlistStore.removeStock(stock.sym)"
       />
     </div>
 
