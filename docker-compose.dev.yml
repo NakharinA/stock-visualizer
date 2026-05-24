@@ -22,7 +22,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=*
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/stockdb
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=dev-secret-key
@@ -41,7 +41,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NUXT_PUBLIC_API_BASE=http://backend:8000
+      - NUXT_PUBLIC_API_BASE=http://localhost:8000
     volumes:
       - ./frontend:/app
       - /app/node_modules
