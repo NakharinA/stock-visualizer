@@ -3,26 +3,42 @@
     <template #body>
       <div class="space-y-4">
         <UInput
-          class="w-full"
           v-model="query"
+          class="w-full"
           placeholder="Search by symbol or company name…"
           icon="i-lucide-search"
           autofocus
+          @input="onSearch"
+        />
+
+        <!-- Error -->
+        <UAlert
+          v-if="addError"
+          color="error"
+          variant="subtle"
+          :description="addError"
+          icon="i-lucide-alert-circle"
         />
 
         <div class="overflow-auto max-h-72">
+          <div v-if="searching" class="flex items-center justify-center py-8 text-muted text-sm gap-2">
+            <UIcon name="i-lucide-loader-circle" class="w-4 h-4 animate-spin" />
+            Searching…
+          </div>
           <UTable
-            :data="filteredResults"
+            v-else
+            :data="results"
             :columns="columns"
           >
             <template #action-cell="{ row }">
               <UButton
                 size="xs"
                 class="w-full"
-                :disabled="isAdded(row.original.sym)"
+                :disabled="isAdded(row.original.sym) || addingSyms.has(row.original.sym)"
+                :loading="addingSyms.has(row.original.sym)"
                 :color="isAdded(row.original.sym) ? 'neutral' : 'primary'"
                 :variant="isAdded(row.original.sym) ? 'subtle' : 'solid'"
-                @click="addStock(row.original)"
+                @click="addStock(row.original.sym)"
               >
                 {{ isAdded(row.original.sym) ? 'Added' : 'Add' }}
               </UButton>
@@ -38,28 +54,52 @@
 const open = defineModel<boolean>('open', { default: false })
 
 const query = ref('')
+const searching = ref(false)
+const addingSyms = ref<Set<string>>(new Set())
+const addError = ref<string | null>(null)
+
 const watchlistStore = useWatchlistStore()
-const { searchStocks } = useStockApi()
+const stockApi = useStockApi()
 
-const mockResults = [
-  { sym: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ', sector: 'Technology' },
-  { sym: 'GOOGL', name: 'Alphabet Inc.', exchange: 'NASDAQ', sector: 'Technology' },
-  { sym: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ', sector: 'Technology' },
-  { sym: 'AMZN', name: 'Amazon.com Inc.', exchange: 'NASDAQ', sector: 'Consumer Cyclical' },
-  { sym: 'META', name: 'Meta Platforms Inc.', exchange: 'NASDAQ', sector: 'Technology' },
-  { sym: 'TSLA', name: 'Tesla Inc.', exchange: 'NASDAQ', sector: 'Consumer Cyclical' },
-  { sym: 'NVDA', name: 'NVIDIA Corporation', exchange: 'NASDAQ', sector: 'Technology' },
-  { sym: 'JPM', name: 'JPMorgan Chase & Co.', exchange: 'NYSE', sector: 'Financial' },
-  { sym: 'V', name: 'Visa Inc.', exchange: 'NYSE', sector: 'Financial' },
-  { sym: 'WMT', name: 'Walmart Inc.', exchange: 'NYSE', sector: 'Consumer Defensive' },
-]
+interface SearchResult {
+  sym: string
+  name: string
+  exchange: string
+  sector: string
+}
 
-const filteredResults = computed(() => {
-  if (!query.value) return mockResults
-  const q = query.value.toLowerCase()
-  return mockResults.filter(r =>
-    r.sym.toLowerCase().includes(q) || r.name.toLowerCase().includes(q),
-  )
+const results = ref<SearchResult[]>([])
+
+// Debounce search
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+async function onSearch() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(async () => {
+    searching.value = true
+    try {
+      results.value = await stockApi.searchStocks(query.value)
+    }
+    catch {
+      results.value = []
+    }
+    finally {
+      searching.value = false
+    }
+  }, 300)
+}
+
+// Initial load
+onMounted(async () => {
+  searching.value = true
+  try {
+    results.value = await stockApi.searchStocks('')
+  }
+  catch {
+    results.value = []
+  }
+  finally {
+    searching.value = false
+  }
 })
 
 const columns = [
@@ -74,13 +114,26 @@ function isAdded(sym: string) {
   return !!watchlistStore.watchlist.find(s => s.sym === sym)
 }
 
-function addStock(row: typeof mockResults[0]) {
-  watchlistStore.addStock({
-    sym: row.sym,
-    name: row.name,
-    price: +(Math.random() * 400 + 50).toFixed(2),
-    change: +(Math.random() * 10 - 5).toFixed(2),
-    changePct: +(Math.random() * 4 - 2).toFixed(2),
-  })
+async function addStock(sym: string) {
+  addError.value = null
+  addingSyms.value = new Set([...addingSyms.value, sym])
+  try {
+    await watchlistStore.addStock(sym)
+  }
+  catch (err: any) {
+    const status = err?.response?.status
+    if (status === 409) {
+      addError.value = `${sym} is already in your watchlist.`
+    }
+    else if (status === 404) {
+      addError.value = `Symbol ${sym} not found.`
+    }
+    else {
+      addError.value = 'Failed to add stock. Please try again.'
+    }
+  }
+  finally {
+    addingSyms.value = new Set([...addingSyms.value].filter(s => s !== sym))
+  }
 }
 </script>

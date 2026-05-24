@@ -12,6 +12,15 @@
         <p class="text-sm text-muted">Sign in to your account</p>
       </div>
 
+      <!-- Error alert -->
+      <UAlert
+        v-if="error"
+        color="error"
+        variant="subtle"
+        :description="error"
+        icon="i-lucide-alert-circle"
+      />
+
       <!-- Form -->
       <form class="space-y-4" @submit.prevent="handleLogin">
         <UFormField label="Email" name="email">
@@ -58,6 +67,7 @@
         variant="outline"
         color="neutral"
         class="w-full justify-center gap-2"
+        :loading="loading"
         @click="handleGoogle"
       >
         <UIcon name="i-simple-icons-google" class="w-4 h-4" />
@@ -71,24 +81,54 @@
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+const error = ref<string | null>(null)
 
 const authStore = useAuthStore()
+const authApi = useAuthApi()
 const router = useRouter()
 
 async function handleLogin() {
   if (!email.value || !password.value) return
   loading.value = true
-  await new Promise(r => setTimeout(r, 400))
-  authStore.login(email.value, password.value)
-  loading.value = false
-  router.push('/dashboard')
+  error.value = null
+  try {
+    const res = await authApi.login(email.value, password.value)
+    authStore.setSession(res.user, res.token)
+    router.push('/dashboard')
+  }
+  catch (err: any) {
+    const status = err?.response?.status
+    if (status === 401) {
+      error.value = 'Invalid email or password.'
+    }
+    else {
+      error.value = 'Something went wrong. Please try again.'
+    }
+  }
+  finally {
+    loading.value = false
+  }
 }
 
 async function handleGoogle() {
   loading.value = true
-  await new Promise(r => setTimeout(r, 400))
-  authStore.login('demo@example.com', '')
-  loading.value = false
-  router.push('/dashboard')
+  error.value = null
+  try {
+    const res = await authApi.loginWithGoogle()
+    authStore.setSession(res.user, res.token)
+    router.push('/dashboard')
+  }
+  catch (err: any) {
+    const status = err?.response?.status
+    if (status === 501) {
+      error.value = 'Google login is not yet available.'
+    }
+    else {
+      error.value = 'Something went wrong. Please try again.'
+    }
+  }
+  finally {
+    loading.value = false
+  }
 }
 </script>

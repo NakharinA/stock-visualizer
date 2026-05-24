@@ -1,6 +1,13 @@
 <template>
   <ClientOnly>
+    <div v-if="loading" class="flex items-center justify-center h-48 text-muted text-sm">
+      Loading chart…
+    </div>
+    <div v-else-if="!seriesData.length" class="flex items-center justify-center h-48 text-muted text-sm">
+      No data available
+    </div>
     <VueApexCharts
+      v-else
       type="area"
       height="192"
       :options="chartOptions"
@@ -12,22 +19,19 @@
 <script setup lang="ts">
 import VueApexCharts from 'vue3-apexcharts'
 
+const props = defineProps<{
+  data: { date: string; pnl: number }[]
+  loading?: boolean
+}>()
+
 const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')
 
-const pnlData = [
-  { x: 'Mon', y: 300 },
-  { x: 'Tue', y: -150 },
-  { x: 'Wed', y: 620 },
-  { x: 'Thu', y: 410 },
-  { x: 'Fri', y: -80 },
-  { x: 'Sat', y: 720 },
-  { x: 'Sun', y: 1240 },
-]
+const seriesData = computed(() => props.data)
 
-const chartOptions = computed(() => ({
+const chartOptions = computed((): ApexCharts.ApexOptions => ({
   chart: {
-    type: 'area',
+    type: 'area' as const,
     background: 'transparent',
     toolbar: { show: false },
   },
@@ -40,7 +44,7 @@ const chartOptions = computed(() => ({
   stroke: { curve: 'smooth', width: 2 },
   dataLabels: { enabled: false },
   xaxis: {
-    categories: pnlData.map(d => d.x),
+    categories: seriesData.value.map(d => d.date),
     labels: { style: { colors: isDark.value ? '#8b949e' : '#57606a' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
@@ -55,5 +59,5 @@ const chartOptions = computed(() => ({
   tooltip: { theme: isDark.value ? 'dark' : 'light' },
 }))
 
-const series = [{ name: 'PnL', data: pnlData.map(d => d.y) }]
+const series = computed(() => [{ name: 'PnL', data: seriesData.value.map(d => d.pnl) }])
 </script>

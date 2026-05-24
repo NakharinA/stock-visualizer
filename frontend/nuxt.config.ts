@@ -7,6 +7,11 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@pinia/nuxt',
   ],
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:8000',
+    },
+  },
   components: {
     dirs: [
       { path: '~/components', pathPrefix: false },

@@ -1,31 +1,42 @@
 import { defineStore } from 'pinia'
 
 interface User {
+  id: string
   name: string
   email: string
-  avatar?: string
+  avatar?: string | null
 }
 
-const AUTH_KEY = 'stockviz-auth-user'
-
 export const useAuthStore = defineStore('auth', () => {
-  const stored = import.meta.client ? localStorage.getItem(AUTH_KEY) : null
-  const user = ref<User | null>(stored ? JSON.parse(stored) : null)
-  const isAuthenticated = computed(() => !!user.value)
+  // Token persisted in cookie (7-day expiry matches backend JWT)
+  const token = useCookie<string | null>('stockviz-token', {
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'lax',
+  })
 
-  function login(email: string, _password: string) {
-    user.value = {
-      name: email.split('@')[0] ?? 'User',
-      email,
-      avatar: undefined,
-    }
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user.value))
+  const user = ref<User | null>(null)
+  const isAuthenticated = computed(() => !!token.value)
+
+  // Hydrate user from cookie-stored user data on client
+  const userCookie = useCookie<User | null>('stockviz-user', {
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'lax',
+  })
+  if (userCookie.value) {
+    user.value = userCookie.value
   }
 
-  function logout() {
+  function setSession(userData: User, accessToken: string) {
+    token.value = accessToken
+    user.value = userData
+    userCookie.value = userData
+  }
+
+  function clearSession() {
+    token.value = null
     user.value = null
-    localStorage.removeItem(AUTH_KEY)
+    userCookie.value = null
   }
 
-  return { user, isAuthenticated, login, logout }
+  return { token, user, isAuthenticated, setSession, clearSession }
 })

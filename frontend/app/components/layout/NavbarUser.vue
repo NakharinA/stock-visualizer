@@ -16,6 +16,7 @@
         icon="i-lucide-log-out"
         size="xs"
         title="Logout"
+        :loading="loggingOut"
         @click="logout"
       />
     </template>
@@ -26,10 +27,17 @@
 defineProps<{ collapsed: boolean }>()
 
 const authStore = useAuthStore()
+const authApi = useAuthApi()
 const router = useRouter()
+const loggingOut = ref(false)
 
-function logout() {
-  authStore.logout()
+async function logout() {
+  loggingOut.value = true
+  if (authStore.token) {
+    await authApi.logout(authStore.token)
+  }
+  authStore.clearSession()
   router.push('/login')
+  loggingOut.value = false
 }
 </script>

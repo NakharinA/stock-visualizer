@@ -14,6 +14,7 @@ export interface CandleBar {
 export const useChartStore = defineStore('chart', () => {
   const timeframe = ref<Timeframe>('1D')
   const candleData = ref<CandleBar[]>([])
+  const indicatorData = ref<Record<string, any>>({})
   const isLoading = ref(false)
 
   function setTimeframe(tf: Timeframe) {
@@ -24,5 +25,9 @@ export const useChartStore = defineStore('chart', () => {
     candleData.value = data
   }
 
-  return { timeframe, candleData, isLoading, setTimeframe, setCandleData }
+  function setIndicatorData(data: Record<string, any>) {
+    indicatorData.value = data
+  }
+
+  return { timeframe, candleData, indicatorData, isLoading, setTimeframe, setCandleData, setIndicatorData }
 })
