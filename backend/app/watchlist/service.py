@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User, WatchlistItem
+from app.models import User, WatchlistCache, WatchlistItem
 from app.watchlist.schemas import WatchlistItemSchema, WatchlistResponse
 
 
@@ -37,17 +37,38 @@ async def get_watchlist(user: User, db: AsyncSession) -> WatchlistResponse:
     result = await db.execute(select(WatchlistItem).where(WatchlistItem.user_id == user.id))
     items = result.scalars().all()
 
+    if not items:
+        return WatchlistResponse(items=[])
+
+    # Fetch cached price data for all syms in one query
+    syms = [item.sym.upper() for item in items]
+    cache_result = await db.execute(
+        select(WatchlistCache).where(WatchlistCache.sym.in_(syms))
+    )
+    cache_map = {c.sym: c for c in cache_result.scalars().all()}
+
     response_items = []
     for item in items:
-        try:
-            ticker = yf.Ticker(item.sym.upper())
-            info = ticker.info
-            name = info.get("longName") or info.get("shortName") or item.sym
-        except Exception:
-            name = item.sym
-
-        price_data = _fetch_price_data(item.sym)
-        response_items.append(_build_item(item.sym, name, price_data))
+        sym = item.sym.upper()
+        cached = cache_map.get(sym)
+        if cached:
+            response_items.append(WatchlistItemSchema(
+                sym=sym,
+                name=cached.name,
+                price=cached.price,
+                change=cached.change,
+                changePct=cached.change_pct,
+            ))
+        else:
+            # Cache miss: fetch live and return
+            try:
+                ticker = yf.Ticker(sym)
+                info = ticker.info
+                name = info.get("longName") or info.get("shortName") or sym
+            except Exception:
+                name = sym
+            price_data = _fetch_price_data(sym)
+            response_items.append(_build_item(sym, name, price_data))
 
     return WatchlistResponse(items=response_items)
 

@@ -13,7 +13,9 @@ TIMEFRAME_MAP: dict[str, tuple[str, str]] = {
     "1W":  ("1h", "1mo"),
     "1M":  ("1h", "3mo"),
     "3M":  ("1h", "6mo"),
-    "1Y":  ("1h", "2y"),
+    "6M":  ("1d", "6mo"),
+    "1Y":  ("1d", "1y"),
+    "2Y":  ("1d", "2y"),
 }
 
 

@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
+import logging
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -9,11 +11,22 @@ from app.core.config import settings
 from app.portfolio.router import router as portfolio_router
 from app.stocks.router import router as stocks_router
 from app.watchlist.router import router as watchlist_router
+from app.watchlist.cron import refresh_watchlist_cache
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    yield
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(refresh_watchlist_cache, "interval", hours=1, id="watchlist_cache_refresh", replace_existing=True)
+    scheduler.start()
+    logger.info("APScheduler started: watchlist cache will refresh every hour")
+    try:
+        yield
+    finally:
+        scheduler.shutdown(wait=False)
+        logger.info("APScheduler stopped")
 
 
 app = FastAPI(

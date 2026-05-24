@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Float
 
 from app.core.database import Base
 
@@ -56,3 +57,14 @@ class WatchlistItem(Base):
     sym: Mapped[str] = mapped_column(String, nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="watchlist_items")
+
+
+class WatchlistCache(Base):
+    __tablename__ = "watchlist_cache"
+
+    sym: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    change: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    change_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

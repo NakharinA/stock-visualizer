@@ -57,5 +57,5 @@ const watchlistStore = useWatchlistStore()
 const chartStore = useChartStore()
 const focusedStock = computed(() => watchlistStore.focusedStock)
 
-const timeframes: Timeframe[] = ['1D', '1W', '1M', '3M', '1Y']
+const timeframes: Timeframe[] = ['2Y', '1Y', '6M']
 </script>

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-export type Timeframe = '1D' | '1W' | '1M' | '3M' | '1Y'
+export type Timeframe = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | '2Y'
 
 export interface CandleBar {
   time: number
@@ -12,7 +12,7 @@ export interface CandleBar {
 }
 
 export const useChartStore = defineStore('chart', () => {
-  const timeframe = ref<Timeframe>('1D')
+  const timeframe = ref<Timeframe>('1Y')
   const candleData = ref<CandleBar[]>([])
   const indicatorData = ref<Record<string, any>>({})
   const isLoading = ref(false)
