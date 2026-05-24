@@ -1,33 +1,24 @@
-import json
 from datetime import date, timedelta
 
 import yfinance as yf
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import cache_get, cache_set
 from app.models import PnlSnapshot, Position, User
 from app.portfolio.schemas import PnlPoint, PnlResponse, StatsResponse
 
 PERIOD_DAYS = {"7d": 7, "30d": 30, "1y": 365}
 
 
-async def _fetch_price(sym: str) -> dict:
-    cached = await cache_get(f"price:{sym}")
-    if cached:
-        return json.loads(cached)
-
+def _fetch_price(sym: str) -> dict:
     try:
         info = yf.Ticker(sym).fast_info
         current = float(info.last_price or 0)
         previous = float(info.previous_close or 0)
     except Exception:
         current, previous = 0.0, 0.0
-
-    data = {"current": current, "previous": previous}
-    await cache_set(f"price:{sym}", json.dumps(data))
-    return data
+    return {"current": current, "previous": previous}
 
 
 async def get_pnl(user: User, period: str, db: AsyncSession) -> PnlResponse:
@@ -44,7 +35,6 @@ async def get_pnl(user: User, period: str, db: AsyncSession) -> PnlResponse:
     )
     snapshots = result.scalars().all()
 
-    # Compute totalCost from positions
     pos_result = await db.execute(select(Position).where(Position.user_id == user.id))
     positions = pos_result.scalars().all()
     total_cost = sum(float(p.quantity) * float(p.avg_cost) for p in positions) or 1.0
@@ -63,11 +53,10 @@ async def get_stats(user: User, db: AsyncSession) -> StatsResponse:
     total_value = 0.0
     total_cost = 0.0
     for pos in positions:
-        price_data = await _fetch_price(pos.sym)
+        price_data = _fetch_price(pos.sym)
         total_value += float(pos.quantity) * price_data["current"]
         total_cost += float(pos.quantity) * float(pos.avg_cost)
 
-    # Today's pnl snapshot
     today = date.today()
     snap_result = await db.execute(
         select(PnlSnapshot).where(PnlSnapshot.user_id == user.id, PnlSnapshot.date == today)
@@ -75,7 +64,6 @@ async def get_stats(user: User, db: AsyncSession) -> StatsResponse:
     today_snap = snap_result.scalars().first()
 
     if today_snap is None:
-        # Lazy-write today's snapshot based on unrealized gain
         today_pnl = round(total_value - total_cost, 2)
         new_snap = PnlSnapshot(user_id=user.id, date=today, pnl=today_pnl)
         db.add(new_snap)
@@ -85,10 +73,9 @@ async def get_stats(user: User, db: AsyncSession) -> StatsResponse:
 
     today_pnl_pct = round(today_pnl / total_cost * 100, 4) if total_cost else 0.0
 
-    # Focused symbol price
     focused_price: float | None = None
     if user.focused_sym:
-        price_data = await _fetch_price(user.focused_sym)
+        price_data = _fetch_price(user.focused_sym)
         focused_price = price_data["current"]
 
     return StatsResponse(

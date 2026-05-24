@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 
 from app.auth.router import router as auth_router
 from app.core.config import settings
-from app.core.redis import get_redis
 from app.portfolio.router import router as portfolio_router
 from app.stocks.router import router as stocks_router
 from app.watchlist.router import router as watchlist_router
@@ -14,8 +13,6 @@ from app.watchlist.router import router as watchlist_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialise Redis connection pool on startup
-    get_redis()
     yield
 
 

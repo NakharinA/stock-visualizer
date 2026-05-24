@@ -1,4 +1,3 @@
-import json
 import uuid
 
 import yfinance as yf
@@ -6,27 +5,18 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import cache_get, cache_set
 from app.models import User, WatchlistItem
 from app.watchlist.schemas import WatchlistItemSchema, WatchlistResponse
 
 
-async def _fetch_price_data(sym: str) -> dict:
-    cache_key = f"price:{sym.upper()}"
-    cached = await cache_get(cache_key)
-    if cached:
-        return json.loads(cached)
-
+def _fetch_price_data(sym: str) -> dict:
     try:
         fast = yf.Ticker(sym.upper()).fast_info
         current = float(fast.last_price or 0)
         previous = float(fast.previous_close or 0)
     except Exception:
         current, previous = 0.0, 0.0
-
-    data = {"current": current, "previous": previous}
-    await cache_set(cache_key, json.dumps(data))
-    return data
+    return {"current": current, "previous": previous}
 
 
 def _build_item(sym: str, name: str, price_data: dict) -> WatchlistItemSchema:
@@ -56,7 +46,7 @@ async def get_watchlist(user: User, db: AsyncSession) -> WatchlistResponse:
         except Exception:
             name = item.sym
 
-        price_data = await _fetch_price_data(item.sym)
+        price_data = _fetch_price_data(item.sym)
         response_items.append(_build_item(item.sym, name, price_data))
 
     return WatchlistResponse(items=response_items)
@@ -89,7 +79,7 @@ async def add_to_watchlist(user: User, sym: str, db: AsyncSession) -> WatchlistI
     db.add(new_item)
     await db.flush()
 
-    price_data = await _fetch_price_data(sym)
+    price_data = _fetch_price_data(sym)
     return _build_item(sym, name, price_data)
 
 

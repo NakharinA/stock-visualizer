@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 
 import pandas as pd
@@ -6,23 +5,21 @@ import pandas_ta as ta  # noqa: F401 — registers df.ta accessor
 import yfinance as yf
 from fastapi import HTTPException, status
 
-from app.core.redis import cache_get, cache_set
 from app.stocks.schemas import Bar, CandlesResponse, IndicatorsResponse, SearchResponse, SearchResult
 
-# yfinance doesn't support 4h interval; use 60m as closest valid option for 1Y
+# Each candle is 1 hour. Period covers enough history per timeframe.
 TIMEFRAME_MAP: dict[str, tuple[str, str]] = {
-    "1D": ("1m", "1d"),
-    "1W": ("5m", "5d"),
-    "1M": ("30m", "1mo"),
-    "3M": ("60m", "3mo"),
-    "1Y": ("60m", "1y"),
+    "1D":  ("1h", "5d"),
+    "1W":  ("1h", "1mo"),
+    "1M":  ("1h", "3mo"),
+    "3M":  ("1h", "6mo"),
+    "1Y":  ("1h", "2y"),
 }
 
 
 def _df_to_bars(df: pd.DataFrame) -> list[Bar]:
     bars = []
     for ts, row in df.iterrows():
-        # Convert tz-aware timestamp to UTC unix seconds
         if hasattr(ts, "timestamp"):
             unix = int(ts.timestamp())
         else:
@@ -49,26 +46,17 @@ async def get_candles(
     if timeframe not in TIMEFRAME_MAP:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timeframe")
 
-    cache_key = f"candles:{sym.upper()}:{timeframe}"
-    cached = await cache_get(cache_key)
+    interval, period = TIMEFRAME_MAP[timeframe]
+    try:
+        df = yf.Ticker(sym.upper()).history(interval=interval, period=period)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
 
-    if cached:
-        raw_bars = [Bar(**b) for b in json.loads(cached)]
-    else:
-        interval, period = TIMEFRAME_MAP[timeframe]
-        try:
-            df = yf.Ticker(sym.upper()).history(interval=interval, period=period)
-        except Exception as exc:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+    if df.empty:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Symbol not found")
 
-        if df.empty:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Symbol not found")
+    bars = _df_to_bars(df)
 
-        raw_bars = _df_to_bars(df)
-        await cache_set(cache_key, json.dumps([b.model_dump() for b in raw_bars]))
-
-    # Apply filters
-    bars = raw_bars
     if to is not None:
         bars = [b for b in bars if b.time <= to]
     if limit is not None:
@@ -153,7 +141,6 @@ async def get_indicators(
             elif ind == "CCI":
                 result["CCI"] = series_to_list(df.ta.cci())
         except Exception:
-            # Skip indicator on computation error — don't break entire response
             pass
 
     return IndicatorsResponse(sym=sym.upper(), timeframe=timeframe, indicators=result)
