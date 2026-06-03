@@ -8,16 +8,20 @@ from fastapi.responses import JSONResponse
 
 from app.auth.router import router as auth_router
 from app.core.config import settings
+from app.core.database import engine, Base
 from app.portfolio.router import router as portfolio_router
 from app.stocks.router import router as stocks_router
 from app.watchlist.router import router as watchlist_router
 from app.watchlist.cron import refresh_watchlist_cache
+import app.models  # noqa: F401 — ensure all models are registered with Base
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     scheduler = AsyncIOScheduler()
     scheduler.add_job(refresh_watchlist_cache, "interval", hours=1, id="watchlist_cache_refresh", replace_existing=True)
     scheduler.start()
