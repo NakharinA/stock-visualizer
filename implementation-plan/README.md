@@ -1,30 +1,40 @@
 # Implementation Plan
 
 ## Overview
-
-A TradingView-inspired stock visualizer with a Nuxt 3 frontend and a FastAPI + uv backend. All stock data is fetched on-demand from yfinance — no database, no cache. The app has three pages: a blank Dashboard, a candlestick Stock Chart with overlaid indicators and oscillator subpanels, and a Stock Overview table backed by a localStorage watchlist.
+A TradingView-inspired stock visualizer built with Nuxt 3 + Nuxt UI Pro on the frontend and FastAPI + uv on the backend. All stock data is fetched on-demand from yfinance — no database, no cache. The app has three pages: a blank Dashboard, a candlestick Stock Chart page with indicator overlays and a tabbed subpanel, and a Stock Overview table backed by a localStorage watchlist.
 
 ## Phases
 
 | Phase | Goal | Key Deliverable |
 |-------|------|-----------------|
-| Phase 01 | Frontend scaffold | Nuxt 3 + Nuxt UI Pro app runs locally; all three pages stubbed |
-| Phase 02 | Backend scaffold | FastAPI server starts; `/health` returns 200 |
-| Phase 03 | Backend API & data | All endpoints return correct JSON; yfinance + indicators wired |
-| Phase 04 | Stock overview page | Table loads prices; watchlist persists in localStorage; row click navigates |
-| Phase 05 | Stock chart — core | Candlestick chart renders; zoom works; EMA overlays toggle; symbol autocomplete works |
-| Phase 06 | Stock chart — subpanel | MACD / RSI / StochRSI tabs render; subpanel collapses when all off |
-| Phase 07 | Stock chart — advanced overlays | Fibonacci, Support/Resistance, FVG boxes toggle on/off |
-| Phase 08 | Polish | Loading states, error handling, dark theme consistency, responsive layout |
+| Phase 01 | Backend Scaffold | FastAPI project initialized, folder structure, health check endpoint |
+| Phase 02 | Frontend Scaffold | Nuxt 3 project initialized, sidebar layout, 3 blank pages |
+| Phase 03 | Shared Foundation | Pydantic response models, typed API composable skeleton, dev proxy config |
+| Phase 04 | Backend API | All endpoints: /stock/{symbol}, /overview, /search with full indicator logic |
+| Phase 04.5 | Testing: Backend API | Unit tests for all indicators, integration tests for all 3 endpoints |
+| Phase 05 | Stock Overview Page | Watchlist table connected to /overview with localStorage persistence and row navigation |
+| Phase 05.5 | Testing: Stock Overview | Playwright e2e and component tests for the overview page |
+| Phase 06 | Stock Chart Core | Candlestick chart, time window tabs, symbol autocomplete search, default symbol |
+| Phase 06.5 | Testing: Stock Chart Core | Playwright e2e and component tests for chart core functionality |
+| Phase 07 | Chart Indicator Overlays | EMA lines, Fibonacci levels, S/R lines, FVG boxes, indicator toggle panel |
+| Phase 07.5 | Testing: Chart Overlays | Tests for overlay rendering and toggle behavior |
+| Phase 08 | Indicator Subpanel | MACD/RSI/StochRSI tabbed subpanel with collapse/expand behavior |
+| Phase 08.5 | Testing: Indicator Subpanel | Tests for tab switching, chart resize, and subpanel collapse |
+| Phase 09 | Polish | Loading skeletons, error states, dark theme consistency, responsive layout |
+| Phase 09.5 | Testing: Polish | Final regression pass across all pages |
 
 ## How Phases Chain Together
 
-**Phases 01–02** build the two apps in isolation — each can be run and verified independently before any cross-service wiring.
+**Phases 01–03** are purely scaffold. Phase 01 initializes the FastAPI backend project. Phase 02 initializes the Nuxt frontend shell. Phase 03 wires them together via typed composables and shared configuration — no real API calls or feature logic yet.
 
-**Phase 03** completes all backend endpoints. By the time the frontend starts consuming real data (Phase 04), the full API contract is already stable and testable with curl.
+**Phase 04** builds all backend logic: yfinance data fetching, all indicator calculations (EMA, MACD, RSI, StochRSI, Fibonacci, S/R, FVG), and all three API routes including the autocomplete search. This phase must be fully complete before any frontend page can display real data.
 
-**Phase 04** (Stock Overview) is the first integration point: it connects the frontend composable to the real `/overview` endpoint, proving the full request path before tackling the more complex chart page.
+**Phase 05** implements the Stock Overview page. It has a simple API dependency (only /overview), no chart library, and self-contained state (localStorage). It is intentionally built before the chart page to establish the frontend data-fetching and table patterns.
 
-**Phases 05–07** build the Stock Chart incrementally: core rendering first (Phase 05), then oscillator subpanels (Phase 06), then the most complex overlays (Phase 07). Each phase leaves the chart in a working, demo-able state.
+**Phase 06** integrates Lightweight Charts into the Stock Chart page. This is the most technically complex frontend phase: configuring zoom-only behavior, rendering candlesticks from OHLCV data, wiring autocomplete search, and handling the default symbol redirect. It depends on Phase 04 (for real data) and Phase 03 (for the API composable).
 
-**Phase 08** is a horizontal polish pass across the entire app — no new features, only UX quality.
+**Phase 07** adds overlay layers on top of the working Phase 06 chart: EMA lines, Fibonacci levels, Support/Resistance horizontal lines, and FVG semi-transparent boxes. The `IndicatorToggle.vue` panel controls visibility of all overlays and subpanel indicators.
+
+**Phase 08** adds the tabbed indicator subpanel below the main chart for MACD, RSI, and StochRSI. Includes the collapse behavior: when all subpanel indicators are toggled off, the subpanel hides and the main chart expands to full height.
+
+**Phase 09** applies final polish: skeleton loaders, error boundaries, consistent dark theming across all pages, and a responsive layout audit.
