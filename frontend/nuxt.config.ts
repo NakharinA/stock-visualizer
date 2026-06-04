@@ -1,5 +1,6 @@
 export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
+  css: ['~/assets/css/main.css'],
   colorMode: {
     preference: 'dark',
     fallback: 'dark',
@@ -7,7 +8,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   nitro: {
     devProxy: {
-      '/api': { target: 'http://localhost:8000', changeOrigin: true },
+      '/api': { target: process.env.BACKEND_URL ?? 'http://localhost:8000', changeOrigin: true },
     },
   },
   runtimeConfig: {

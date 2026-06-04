@@ -6,9 +6,10 @@ export function useStockApi() {
     throw new Error('Not implemented')
   }
 
-  async function fetchOverview(_symbols: string[]): Promise<OverviewItem[]> {
-    // TODO: implement in Phase 04
-    throw new Error('Not implemented')
+  async function fetchOverview(symbols: string[]): Promise<OverviewItem[]> {
+    return $fetch<OverviewItem[]>('/api/overview', {
+      query: { symbols: symbols.join(',') },
+    })
   }
 
   async function searchSymbols(_query: string): Promise<SearchResult[]> {
