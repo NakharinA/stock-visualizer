@@ -1,15 +1,21 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import stock, overview
+from routers import stock, overview, search
 
 app = FastAPI(title="Stock Visualizer API")
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    return JSONResponse(status_code=500, content={"error": str(exc)})
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +27,7 @@ app.add_middleware(
 
 app.include_router(stock.router)
 app.include_router(overview.router)
+app.include_router(search.router)
 
 
 @app.get("/health")
