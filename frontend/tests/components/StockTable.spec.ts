@@ -1,100 +1,113 @@
 import { test, expect, type Page } from '@playwright/test'
 
-type OverviewItem = { symbol: string; price: number; diff_value: number; diff_pct: number }
+// Phase 10 redesign: hand-built sortable table. Rows are still tr[role="button"]
+// and remove is still aria-label="Remove". Up/down use .up/.down classes; the
+// "Last" column is bare (no $), change uses fmtSigned, change% uses a delta pill.
 
-const ITEMS: OverviewItem[] = [
-  { symbol: 'AAPL', price: 189.50, diff_value: 2.30, diff_pct: 1.23 },
-  { symbol: 'TSLA', price: 245.10, diff_value: -4.20, diff_pct: -3.31 },
-  { symbol: 'GOOG', price: 100.00, diff_value: 0, diff_pct: 0 },
+type Item = {
+  symbol: string, price: number, diff_value: number, diff_pct: number
+  name?: string, sector?: string, volume?: number, spark?: number[]
+}
+
+const ITEMS: Item[] = [
+  { symbol: 'AAPL', price: 189.50, diff_value: 2.30, diff_pct: 1.23, name: 'Apple', volume: 5e7, spark: [180, 185, 189] },
+  { symbol: 'TSLA', price: 245.10, diff_value: -4.20, diff_pct: -3.31, name: 'Tesla', volume: 4e7, spark: [260, 250, 245] },
+  { symbol: 'GOOG', price: 100.00, diff_value: 0, diff_pct: 0, name: 'Alphabet', volume: 2e7, spark: [100, 100, 100] },
 ]
 
-async function setupPage(page: Page, items: OverviewItem[]) {
+async function setupPage(page: Page, items: Item[]) {
   const symbols = items.map(i => i.symbol)
   await page.addInitScript(() => localStorage.removeItem('stock-watchlist'))
   await page.addInitScript((syms: string[]) => {
     localStorage.setItem('stock-watchlist', JSON.stringify(syms))
   }, symbols)
   await page.route('**/api/overview**', async (route) => {
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(items) })
+    // Honor the symbols query like the real backend so a post-remove refetch
+    // returns only the remaining rows.
+    const url = new URL(route.request().url())
+    const want = (url.searchParams.get('symbols') ?? '').split(',').filter(Boolean)
+    const body = want.map(s => items.find(i => i.symbol === s)).filter(Boolean)
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) })
   })
   await page.goto('/overview')
 }
 
 const dataRows = (page: Page) => page.locator('tr[role="button"]')
 
-test.describe('StockTable component', () => {
+test.describe('StockTable component (redesigned)', () => {
   test('renders correct number of rows', async ({ page }) => {
     await setupPage(page, ITEMS)
     await expect(dataRows(page)).toHaveCount(3)
   })
 
-  test('positive diff_value row has green color class', async ({ page }) => {
+  test('positive change row uses up (green) class', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const aaplRow = dataRows(page).filter({ hasText: 'AAPL' })
-    await expect(aaplRow.locator('span.text-green-500').first()).toBeVisible()
+    const row = dataRows(page).filter({ hasText: 'AAPL' })
+    await expect(row.locator('.up').first()).toBeVisible()
+    await expect(row.locator('.down')).toHaveCount(0)
   })
 
-  test('negative diff_value row has red color class', async ({ page }) => {
+  test('negative change row uses down (red) class', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const tslaRow = dataRows(page).filter({ hasText: 'TSLA' })
-    await expect(tslaRow.locator('span.text-red-500').first()).toBeVisible()
+    const row = dataRows(page).filter({ hasText: 'TSLA' })
+    await expect(row.locator('.down').first()).toBeVisible()
   })
 
-  test('zero diff_value row has no color class', async ({ page }) => {
+  test('Last column renders the price without a $ prefix', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const googRow = dataRows(page).filter({ hasText: 'GOOG' })
-    await expect(googRow.locator('span.text-green-500')).toHaveCount(0)
-    await expect(googRow.locator('span.text-red-500')).toHaveCount(0)
-  })
-
-  test('price formatted as $189.50', async ({ page }) => {
-    await setupPage(page, ITEMS)
-    const aaplRow = dataRows(page).filter({ hasText: 'AAPL' })
-    await expect(aaplRow).toContainText('$189.50')
+    const row = dataRows(page).filter({ hasText: 'AAPL' })
+    await expect(row).toContainText('189.50')
   })
 
   test('positive change formatted as +2.30', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const aaplRow = dataRows(page).filter({ hasText: 'AAPL' })
-    await expect(aaplRow).toContainText('+2.30')
+    await expect(dataRows(page).filter({ hasText: 'AAPL' })).toContainText('+2.30')
   })
 
-  test('change % formatted as +1.23%', async ({ page }) => {
+  test('change % shows +1.23%', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const aaplRow = dataRows(page).filter({ hasText: 'AAPL' })
-    await expect(aaplRow).toContainText('+1.23%')
+    await expect(dataRows(page).filter({ hasText: 'AAPL' })).toContainText('+1.23%')
   })
 
   test('negative change formatted as -4.20 (not +-4.20)', async ({ page }) => {
     await setupPage(page, ITEMS)
-    const tslaRow = dataRows(page).filter({ hasText: 'TSLA' })
-    await expect(tslaRow).toContainText('-4.20')
-    await expect(tslaRow).not.toContainText('+-4.20')
+    const row = dataRows(page).filter({ hasText: 'TSLA' })
+    await expect(row).toContainText('-4.20')
+    await expect(row).not.toContainText('+-4.20')
   })
 
-  test('remove button causes row removal', async ({ page }) => {
+  test('clicking a sortable header re-orders rows', async ({ page }) => {
     await setupPage(page, ITEMS)
-    await expect(dataRows(page)).toHaveCount(3)
+    // Default sort by symbol asc → AAPL, GOOG, TSLA
+    await expect(dataRows(page).nth(0)).toContainText('AAPL')
+    // Sort by Last asc → GOOG (100), AAPL (189.5), TSLA (245.1)
+    await page.locator('th', { hasText: 'Last' }).click()
+    await expect(dataRows(page).nth(0)).toContainText('GOOG')
+    // Toggle to desc → TSLA first
+    await page.locator('th', { hasText: 'Last' }).click()
+    await expect(dataRows(page).nth(0)).toContainText('TSLA')
+  })
 
+  test('remove button removes the row', async ({ page }) => {
+    await setupPage(page, ITEMS)
     await dataRows(page).filter({ hasText: 'AAPL' }).getByLabel('Remove').click()
-
     await expect(dataRows(page)).toHaveCount(2)
     await expect(dataRows(page).filter({ hasText: 'AAPL' })).toHaveCount(0)
   })
 
-  test('row click emits row-click: navigates to /stock/TSLA', async ({ page }) => {
+  test('row click navigates to /stock/TSLA', async ({ page }) => {
     await setupPage(page, ITEMS)
     await dataRows(page).filter({ hasText: 'TSLA' }).click()
     await expect(page).toHaveURL('/stock/TSLA')
   })
 
-  test('remove button does not navigate away from /overview', async ({ page }) => {
+  test('remove does not navigate away from /overview', async ({ page }) => {
     await setupPage(page, ITEMS)
     await dataRows(page).filter({ hasText: 'AAPL' }).getByLabel('Remove').click()
     await expect(page).toHaveURL('/overview')
   })
 
-  test('loading: skeleton visible when fetch is pending', async ({ page }) => {
+  test('loading: skeleton visible while fetch is pending', async ({ page }) => {
     const symbols = ITEMS.map(i => i.symbol)
     await page.addInitScript(() => localStorage.removeItem('stock-watchlist'))
     await page.addInitScript((syms: string[]) => {
@@ -102,7 +115,7 @@ test.describe('StockTable component', () => {
     }, symbols)
     let resolveRoute!: () => void
     await page.route('**/api/overview**', async (route) => {
-      await new Promise<void>(resolve => { resolveRoute = resolve })
+      await new Promise<void>((resolve) => { resolveRoute = resolve })
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ITEMS) })
     })
     await page.goto('/overview')

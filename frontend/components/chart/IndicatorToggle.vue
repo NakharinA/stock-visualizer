@@ -1,90 +1,65 @@
 <script setup lang="ts">
 import type { IndicatorState } from '~/composables/useIndicatorState'
 
-const props = defineProps<{
-  modelValue: IndicatorState
-}>()
+const props = defineProps<{ modelValue: IndicatorState }>()
+const emit = defineEmits<{ 'update:modelValue': [value: IndicatorState] }>()
 
-const emit = defineEmits<{
-  'update:modelValue': [value: IndicatorState]
-}>()
+type Item = { key: keyof IndicatorState, label: string, color: string }
 
-function set(key: keyof IndicatorState, val: unknown) {
-  emit('update:modelValue', { ...props.modelValue, [key]: Boolean(val) })
+const overlays: Item[] = [
+  { key: 'ema20', label: 'EMA 20', color: '#f5a623' },
+  { key: 'ema50', label: 'EMA 50', color: '#4da6ff' },
+  { key: 'ema100', label: 'EMA 100', color: '#c678dd' },
+  { key: 'ema200', label: 'EMA 200', color: '#d7dae0' },
+  { key: 'fibonacci', label: 'Fibonacci', color: '#ff7a18' },
+  { key: 'supportResistance', label: 'Support / Resistance', color: '#9aa0ac' },
+  { key: 'fvg', label: 'Fair Value Gap', color: '#2ebd85' },
+]
+const oscillators: Item[] = [
+  { key: 'macd', label: 'MACD', color: '#4da6ff' },
+  { key: 'rsi', label: 'RSI', color: '#c678dd' },
+  { key: 'stochRsi', label: 'Stoch RSI', color: '#ff9e64' },
+]
+
+function toggle(key: keyof IndicatorState) {
+  emit('update:modelValue', { ...props.modelValue, [key]: !props.modelValue[key] })
 }
 </script>
 
 <template>
-  <div class="rounded-lg border border-gray-700 bg-[#0f1117] px-5 py-4 flex flex-wrap gap-6">
-    <!-- EMA Lines -->
-    <div class="flex flex-col gap-2">
-      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">EMA Lines</p>
-      <div class="grid grid-cols-2 gap-x-6 gap-y-2">
-        <UCheckbox
-          label="EMA 20"
-          :model-value="modelValue.ema20"
-          @update:model-value="set('ema20', $event)"
-        />
-        <UCheckbox
-          label="EMA 50"
-          :model-value="modelValue.ema50"
-          @update:model-value="set('ema50', $event)"
-        />
-        <UCheckbox
-          label="EMA 100"
-          :model-value="modelValue.ema100"
-          @update:model-value="set('ema100', $event)"
-        />
-        <UCheckbox
-          label="EMA 200"
-          :model-value="modelValue.ema200"
-          @update:model-value="set('ema200', $event)"
-        />
-      </div>
+  <div class="ind-rail">
+    <div class="rail-grp">
+      <div class="rail-h">Overlays</div>
+      <button
+        v-for="it in overlays"
+        :key="it.key"
+        class="tog"
+        :class="{ on: modelValue[it.key] }"
+        :aria-pressed="modelValue[it.key]"
+        @click="toggle(it.key)"
+      >
+        <span class="tog-dot" :style="{ background: modelValue[it.key] ? it.color : 'transparent', borderColor: it.color }" />
+        <span class="tog-lbl">{{ it.label }}</span>
+        <span class="tog-sw" :data-on="modelValue[it.key]" />
+      </button>
     </div>
 
-    <!-- Chart Overlays -->
-    <div class="flex flex-col gap-2">
-      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Chart Overlays</p>
-      <div class="flex flex-col gap-2">
-        <UCheckbox
-          label="Fibonacci"
-          :model-value="modelValue.fibonacci"
-          @update:model-value="set('fibonacci', $event)"
-        />
-        <UCheckbox
-          label="Support / Resistance"
-          :model-value="modelValue.supportResistance"
-          @update:model-value="set('supportResistance', $event)"
-        />
-        <UCheckbox
-          label="Fair Value Gaps"
-          :model-value="modelValue.fvg"
-          @update:model-value="set('fvg', $event)"
-        />
-      </div>
+    <div class="rail-grp">
+      <div class="rail-h">Oscillators</div>
+      <button
+        v-for="it in oscillators"
+        :key="it.key"
+        class="tog"
+        :class="{ on: modelValue[it.key] }"
+        :aria-pressed="modelValue[it.key]"
+        @click="toggle(it.key)"
+      >
+        <span class="tog-dot" :style="{ background: modelValue[it.key] ? it.color : 'transparent', borderColor: it.color }" />
+        <span class="tog-lbl">{{ it.label }}</span>
+        <span class="tog-sw" :data-on="modelValue[it.key]" />
+      </button>
     </div>
 
-    <!-- Subpanel Indicators -->
-    <div class="flex flex-col gap-2">
-      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Subpanel Indicators</p>
-      <div class="flex gap-6">
-        <UCheckbox
-          label="MACD"
-          :model-value="modelValue.macd"
-          @update:model-value="set('macd', $event)"
-        />
-        <UCheckbox
-          label="RSI"
-          :model-value="modelValue.rsi"
-          @update:model-value="set('rsi', $event)"
-        />
-        <UCheckbox
-          label="Stoch RSI"
-          :model-value="modelValue.stochRsi"
-          @update:model-value="set('stochRsi', $event)"
-        />
-      </div>
-    </div>
+    <div class="rail-note">Scroll to zoom · pan locked</div>
   </div>
 </template>

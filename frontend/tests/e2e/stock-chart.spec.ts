@@ -94,6 +94,9 @@ test.describe('Stock Chart page', () => {
 
     await page.goto('/stock/AAPL')
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 5000 })
+    // The canvas mounts before the fetch resolves; wait for the initial load to
+    // settle before snapshotting the call count.
+    await page.waitForTimeout(600)
     const countAfterLoad = apiCalls.length
 
     await page.getByRole('button', { name: '3M' }).click()
@@ -176,13 +179,13 @@ test.describe('Stock Chart page', () => {
     await page.goto('/stock/XXXXINVALID')
     await page.waitForTimeout(2000)
 
-    await expect(page.getByText(/XXXXINVALID|not found/i)).toBeVisible()
+    await expect(page.getByText(/not found/i)).toBeVisible()
     await expect(page.locator('canvas')).toHaveCount(0)
   })
 
-  test('loading state: spinner visible while fetch is pending', async ({ page }) => {
+  test('loading state: skeleton visible while fetch is pending', async ({ page }) => {
     // Create the Promise before registering the route so resolveRoute is always a function.
-    // The spinner appears when loading=true (sync), before the HTTP request fires (async).
+    // The skeleton (animate-pulse) appears when loading=true (sync), before the HTTP request fires (async).
     let resolveRoute!: () => void
     const pending = new Promise<void>(r => { resolveRoute = r })
 
@@ -193,8 +196,42 @@ test.describe('Stock Chart page', () => {
     await page.route('**/api/search**', route => route.fulfill({ contentType: 'application/json', body: '[]' }))
 
     await page.goto('/stock/AAPL')
-    await expect(page.locator('.animate-spin')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('.animate-pulse').first()).toBeVisible({ timeout: 5000 })
     resolveRoute()
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 5000 })
+  })
+
+  test('null OHLC / warmup-null indicators do not crash the chart', async ({ page }) => {
+    const pageErrors: string[] = []
+    page.on('pageerror', e => pageErrors.push(String(e)))
+
+    // yfinance can emit NaN rows (→ null in JSON) and EMA/MACD warmup periods are
+    // null; the chart must drop them, not throw.
+    const bars = Array.from({ length: 10 }, (_, i) => {
+      const d = new Date('2024-01-02'); d.setDate(d.getDate() + i)
+      const t = d.toISOString().slice(0, 10)
+      return i < 2
+        ? { time: t, open: null, high: null, low: null, close: null, volume: null }
+        : { time: t, open: 180, high: 185, low: 175, close: 182, volume: 1e6 }
+    })
+    const body = JSON.stringify({
+      symbol: 'AAPL', period: '3mo', ohlcv: bars,
+      indicators: {
+        ema20: bars.map((b, i) => ({ time: b.time, value: i < 3 ? null : 181 })),
+        ema50: [], ema100: [], ema200: [],
+        macd: { macd: bars.map((b, i) => ({ time: b.time, value: i < 4 ? null : 0.5 })), signal: [], histogram: bars.map((b, i) => ({ time: b.time, value: i < 4 ? null : 0.2 })) },
+        rsi: bars.map((b, i) => ({ time: b.time, value: i < 5 ? null : 55 })),
+        stoch_rsi: { k: [], d: [] },
+        fibonacci: { high: 0, low: 0, levels: {} }, support_resistance: [], fvg: [],
+      },
+    })
+    await page.route('**/api/stock/**', route => route.fulfill({ contentType: 'application/json', body }))
+    await page.route('**/api/search**', route => route.fulfill({ contentType: 'application/json', body: '[]' }))
+    await page.route('**/api/overview**', route => route.fulfill({ contentType: 'application/json', body: '[]' }))
+
+    await page.goto('/stock/AAPL')
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 8000 })
+    await page.waitForTimeout(600)
+    expect(pageErrors, pageErrors.join('\n')).toEqual([])
   })
 })

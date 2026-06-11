@@ -22,6 +22,8 @@ A TradingView-inspired stock visualizer built with Nuxt 3 + Nuxt UI Pro on the f
 | Phase 08.5 | Testing: Indicator Subpanel | Tests for tab switching, chart resize, and subpanel collapse |
 | Phase 09 | Polish | Loading skeletons, error states, dark theme consistency, responsive layout |
 | Phase 09.5 | Testing: Polish | Final regression pass across all pages |
+| Phase 10 | Design Handoff Redesign | Apply the "Ticker" design across all pages; build the real Dashboard; extend `/overview` with name/sector/volume/spark |
+| Phase 10.5 | Testing: Design Handoff | Rewrite specs for the new UI contract + add Dashboard/shell tests |
 
 ## How Phases Chain Together
 
@@ -38,3 +40,5 @@ A TradingView-inspired stock visualizer built with Nuxt 3 + Nuxt UI Pro on the f
 **Phase 08** adds the tabbed indicator subpanel below the main chart for MACD, RSI, and StochRSI. Includes the collapse behavior: when all subpanel indicators are toggled off, the subpanel hides and the main chart expands to full height.
 
 **Phase 09** applies final polish: skeleton loaders, error boundaries, consistent dark theming across all pages, and a responsive layout audit.
+
+**Phase 10** applies the "Ticker" design handoff (`requirements/Stock-Vitualizer-handoff.zip`) across the entire app: a design-token system (IBM Plex fonts, dark palette, orange accent), a 78px icon-rail sidebar + topbar with global search and index chips, a fully built **Dashboard** (index cards, watchlist grid, movers — previously blank), and restyled Overview and Chart pages (sortable table with sparklines, rich chart header, FVG canvas boxes, grouped switch-toggle rail). The backend `/overview` endpoint is extended with `name`, `sector`, `volume`, and a `spark` array to feed the new Dashboard and Overview. Backend indicator math from Phase 04 is unchanged. **Phase 10.5** rewrites the Playwright suite for the new UI contract and adds Dashboard/shell coverage.

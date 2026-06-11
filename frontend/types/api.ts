@@ -61,6 +61,10 @@ export interface OverviewItem {
   price: number
   diff_value: number
   diff_pct: number
+  name: string
+  sector: string
+  volume: number
+  spark: number[]
 }
 
 export interface SearchResult {

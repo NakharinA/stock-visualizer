@@ -1,5 +1,9 @@
 import { test, expect, type Page } from '@playwright/test'
 
+// Phase 10 redesign: the indicator panel is now a right-side rail of switch
+// toggles (button.tog with aria-pressed), grouped "Overlays" / "Oscillators".
+// Defaults (from useIndicatorState): ema20, ema50, supportResistance, fvg, macd ON.
+
 const STOCK_BODY = JSON.stringify({
   symbol: 'AAPL', period: '3mo',
   ohlcv: [{ time: '2024-01-02', open: 180, high: 185, low: 175, close: 182, volume: 1e6 }],
@@ -13,108 +17,75 @@ const STOCK_BODY = JSON.stringify({
 })
 
 async function setup(page: Page) {
+  await page.addInitScript(() => localStorage.removeItem('sv.tog'))
   await page.route('**/api/stock/**', route => route.fulfill({ contentType: 'application/json', body: STOCK_BODY }))
   await page.route('**/api/search**', route => route.fulfill({ contentType: 'application/json', body: '[]' }))
+  await page.route('**/api/overview**', route => route.fulfill({ contentType: 'application/json', body: '[]' }))
   await page.goto('/stock/AAPL')
   await expect(page.locator('canvas').first()).toBeVisible({ timeout: 8000 })
-  await page.waitForTimeout(500)
+  await page.waitForTimeout(400)
 }
 
-// Nuxt UI v3 UCheckbox uses Reka UI's CheckboxRoot which renders <button role="checkbox">
-// Use exact: true to avoid substring matches (e.g. 'EMA 20' matching 'EMA 200')
-const cb = (page: Page, name: string) => page.getByRole('checkbox', { name, exact: true })
+// A rail toggle is a `button.tog` whose label span matches exactly.
+const tog = (page: Page, label: string) =>
+  page.locator('button.tog').filter({ has: page.getByText(label, { exact: true }) })
 
-test.describe('IndicatorToggle component', () => {
-
-  test('renders all 10 checkboxes', async ({ page }) => {
+test.describe('Indicator rail (IndicatorToggle)', () => {
+  test('renders all 10 toggles', async ({ page }) => {
     await setup(page)
-    await expect(page.locator('[role="checkbox"]')).toHaveCount(10)
+    await expect(page.locator('button.tog')).toHaveCount(10)
   })
 
-  test('all checkboxes unchecked by default', async ({ page }) => {
+  test('group headers are visible', async ({ page }) => {
     await setup(page)
-    const all = page.locator('[role="checkbox"]')
-    const count = await all.count()
-    for (let i = 0; i < count; i++) {
-      await expect(all.nth(i)).not.toBeChecked()
+    await expect(page.getByText('Overlays', { exact: true })).toBeVisible()
+    await expect(page.getByText('Oscillators', { exact: true })).toBeVisible()
+  })
+
+  test('all toggle labels are visible', async ({ page }) => {
+    await setup(page)
+    for (const l of ['EMA 20', 'EMA 50', 'EMA 100', 'EMA 200', 'Fibonacci', 'Support / Resistance', 'Fair Value Gap']) {
+      await expect(tog(page, l)).toBeVisible()
+    }
+    await expect(tog(page, 'MACD')).toBeVisible()
+    await expect(tog(page, 'RSI')).toBeVisible()
+    await expect(tog(page, 'Stoch RSI')).toBeVisible()
+  })
+
+  test('default-on set: ema20, ema50, Support / Resistance, FVG, MACD', async ({ page }) => {
+    await setup(page)
+    for (const on of ['EMA 20', 'EMA 50', 'Support / Resistance', 'Fair Value Gap', 'MACD']) {
+      await expect(tog(page, on)).toHaveAttribute('aria-pressed', 'true')
+    }
+    for (const off of ['EMA 100', 'EMA 200', 'Fibonacci', 'RSI', 'Stoch RSI']) {
+      await expect(tog(page, off)).toHaveAttribute('aria-pressed', 'false')
     }
   })
 
-  test('group labels are visible', async ({ page }) => {
+  test('enabling EMA 100 flips it on', async ({ page }) => {
     await setup(page)
-    await expect(page.getByText('EMA Lines')).toBeVisible()
-    await expect(page.getByText('Chart Overlays')).toBeVisible()
-    await expect(page.getByText('Subpanel Indicators')).toBeVisible()
+    await expect(tog(page, 'EMA 100')).toHaveAttribute('aria-pressed', 'false')
+    await tog(page, 'EMA 100').click()
+    await expect(tog(page, 'EMA 100')).toHaveAttribute('aria-pressed', 'true')
   })
 
-  test('all EMA checkbox labels are visible', async ({ page }) => {
+  test('disabling EMA 20 flips it off', async ({ page }) => {
     await setup(page)
-    await expect(page.getByText('EMA 20', { exact: true })).toBeVisible()
-    await expect(page.getByText('EMA 50', { exact: true })).toBeVisible()
-    await expect(page.getByText('EMA 100', { exact: true })).toBeVisible()
-    await expect(page.getByText('EMA 200', { exact: true })).toBeVisible()
+    await expect(tog(page, 'EMA 20')).toHaveAttribute('aria-pressed', 'true')
+    await tog(page, 'EMA 20').click()
+    await expect(tog(page, 'EMA 20')).toHaveAttribute('aria-pressed', 'false')
   })
 
-  test('all overlay and subpanel labels are visible', async ({ page }) => {
+  test('toggles are independent (Fibonacci does not affect EMA 200)', async ({ page }) => {
     await setup(page)
-    await expect(page.getByText('Fibonacci', { exact: true })).toBeVisible()
-    await expect(page.getByText('Support / Resistance', { exact: true })).toBeVisible()
-    await expect(page.getByText('Fair Value Gaps', { exact: true })).toBeVisible()
-    await expect(page.getByText('MACD', { exact: true })).toBeVisible()
-    await expect(page.getByText('RSI', { exact: true })).toBeVisible()
-    await expect(page.getByText('Stoch RSI', { exact: true })).toBeVisible()
+    await tog(page, 'Fibonacci').click()
+    await expect(tog(page, 'Fibonacci')).toHaveAttribute('aria-pressed', 'true')
+    await expect(tog(page, 'EMA 200')).toHaveAttribute('aria-pressed', 'false')
   })
 
-  test('checking EMA 50: checkbox becomes checked', async ({ page }) => {
+  test('exact-label matching: EMA 20 toggle is distinct from EMA 200', async ({ page }) => {
     await setup(page)
-    await expect(cb(page, 'EMA 50')).not.toBeChecked()
-    await cb(page, 'EMA 50').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'EMA 50')).toBeChecked()
-  })
-
-  test('unchecking EMA 50: checkbox returns to unchecked', async ({ page }) => {
-    await setup(page)
-    await cb(page, 'EMA 50').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'EMA 50')).toBeChecked()
-    await cb(page, 'EMA 50').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'EMA 50')).not.toBeChecked()
-  })
-
-  test('checking Fibonacci: checkbox becomes checked', async ({ page }) => {
-    await setup(page)
-    await expect(cb(page, 'Fibonacci')).not.toBeChecked()
-    await cb(page, 'Fibonacci').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'Fibonacci')).toBeChecked()
-  })
-
-  test('checking FVG: checkbox becomes checked', async ({ page }) => {
-    await setup(page)
-    await expect(cb(page, 'Fair Value Gaps')).not.toBeChecked()
-    await cb(page, 'Fair Value Gaps').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'Fair Value Gaps')).toBeChecked()
-  })
-
-  test('checking MACD: checkbox becomes checked', async ({ page }) => {
-    await setup(page)
-    await expect(cb(page, 'MACD')).not.toBeChecked()
-    await cb(page, 'MACD').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'MACD')).toBeChecked()
-  })
-
-  test('checking multiple indicators: each state is independent', async ({ page }) => {
-    await setup(page)
-    await cb(page, 'EMA 20').click()
-    await cb(page, 'RSI').click()
-    await page.waitForTimeout(200)
-    await expect(cb(page, 'EMA 20')).toBeChecked()
-    await expect(cb(page, 'RSI')).toBeChecked()
-    await expect(cb(page, 'EMA 50')).not.toBeChecked()
-    await expect(cb(page, 'MACD')).not.toBeChecked()
+    await expect(tog(page, 'EMA 20')).toHaveCount(1)
+    await expect(tog(page, 'EMA 200')).toHaveCount(1)
   })
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { OverviewItem } from '~/types/api'
+import { MOVERS_UNIVERSE } from '~/utils/symbols'
 
 const { symbols, addSymbol, removeSymbol } = useWatchlist()
 const { fetchOverview } = useStockApi()
@@ -8,11 +9,13 @@ const tableData = ref<OverviewItem[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const newSymbol = ref('')
-const duplicateWarning = ref(false)
-let warningTimer: ReturnType<typeof setTimeout> | null = null
+const formErr = ref('')
 
 async function loadData() {
-  if (symbols.value.length === 0) return
+  if (symbols.value.length === 0) {
+    tableData.value = []
+    return
+  }
   loading.value = true
   error.value = null
   try {
@@ -24,42 +27,63 @@ async function loadData() {
   }
 }
 
-// Initial load after useWatchlist populates from localStorage
-onMounted(() => {
-  loadData()
-})
+// Reload whenever the watchlist changes (covers initial localStorage hydration too).
+watch(symbols, loadData, { immediate: true, deep: true })
 
-function handleAdd() {
-  const upper = newSymbol.value.trim().toUpperCase()
-  if (!upper) return
+const quickAdd = computed(() =>
+  MOVERS_UNIVERSE.filter(s => !symbols.value.includes(s)).slice(0, 7),
+)
 
-  const added = addSymbol(upper)
+function addAndLoad(symbol: string) {
+  const added = addSymbol(symbol)
   if (added) {
     newSymbol.value = ''
-    duplicateWarning.value = false
+    formErr.value = ''
     loadData()
   } else {
-    duplicateWarning.value = true
-    if (warningTimer) clearTimeout(warningTimer)
-    warningTimer = setTimeout(() => {
-      duplicateWarning.value = false
-    }, 3000)
+    formErr.value = 'Already in watchlist'
   }
+}
+
+function handleAdd() {
+  const s = newSymbol.value.trim().toUpperCase()
+  if (!s) return
+  if (!/^[A-Z.]{1,6}$/.test(s)) {
+    formErr.value = 'Enter a valid ticker'
+    return
+  }
+  addAndLoad(s)
 }
 
 function handleRemove(symbol: string) {
   removeSymbol(symbol)
-  tableData.value = tableData.value.filter((item) => item.symbol !== symbol)
-}
-
-function handleRowClick(symbol: string) {
-  navigateTo(`/stock/${symbol}`)
+  tableData.value = tableData.value.filter(item => item.symbol !== symbol)
 }
 </script>
 
 <template>
-  <div class="p-6 flex flex-col gap-6">
-    <h1 class="text-2xl font-semibold text-white">Overview</h1>
+  <div class="page overview">
+    <div class="ov-head">
+      <div>
+        <h1 class="h1">Overview</h1>
+        <p class="sub">{{ symbols.length }} symbols · saved to this browser</p>
+      </div>
+      <form class="add-form" @submit.prevent="handleAdd">
+        <div class="add-wrap">
+          <UiAppIcon name="plus" :size="16" />
+          <input
+            v-model="newSymbol"
+            class="add-input"
+            placeholder="Add symbol (e.g. NFLX)"
+            maxlength="6"
+            @input="newSymbol = newSymbol.toUpperCase(); formErr = ''"
+          >
+        </div>
+        <button class="btn-accent" type="submit">Add</button>
+      </form>
+    </div>
+
+    <div v-if="formErr" class="form-err">{{ formErr }}</div>
 
     <UAlert
       v-if="error"
@@ -67,34 +91,28 @@ function handleRowClick(symbol: string) {
       variant="soft"
       :description="error"
       icon="i-heroicons-exclamation-triangle"
+      class="mb-4"
+      :actions="[{ label: 'Try again', color: 'error', variant: 'outline', onClick: loadData }]"
     />
+
+    <div class="sugg">
+      <span class="sugg-l">Quick add</span>
+      <button
+        v-for="s in quickAdd"
+        :key="s"
+        class="chip"
+        @click="addAndLoad(s)"
+      >
+        + {{ s }}
+      </button>
+      <span v-if="quickAdd.length === 0" class="sugg-l">all added</span>
+    </div>
 
     <OverviewStockTable
       :data="tableData"
       :loading="loading"
       @remove="handleRemove"
-      @row-click="handleRowClick"
+      @row-click="(s) => navigateTo(`/stock/${s}`)"
     />
-
-    <div class="flex flex-col gap-2">
-      <div class="flex gap-2 max-w-sm">
-        <UInput
-          v-model="newSymbol"
-          placeholder="Add symbol (e.g. NFLX)"
-          class="flex-1"
-          @keydown.enter="handleAdd"
-        />
-        <UButton label="Add" @click="handleAdd" />
-      </div>
-
-      <UAlert
-        v-if="duplicateWarning"
-        color="warning"
-        variant="soft"
-        description="Already in watchlist"
-        icon="i-heroicons-information-circle"
-        class="max-w-sm"
-      />
-    </div>
   </div>
 </template>

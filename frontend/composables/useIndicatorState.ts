@@ -11,18 +11,46 @@ export interface IndicatorState {
   fvg: boolean
 }
 
-export function useIndicatorState() {
-  const indicators = ref<IndicatorState>({
-    ema20: false,
-    ema50: false,
+const STORAGE_KEY = 'sv.tog'
+
+// Design handoff defaults: a few overlays + MACD on for an informative first view.
+function defaults(): IndicatorState {
+  return {
+    ema20: true,
+    ema50: true,
     ema100: false,
     ema200: false,
-    macd: false,
+    macd: true,
     rsi: false,
     stochRsi: false,
     fibonacci: false,
-    supportResistance: false,
-    fvg: false,
+    supportResistance: true,
+    fvg: true,
+  }
+}
+
+export function useIndicatorState() {
+  const indicators = ref<IndicatorState>(defaults())
+
+  onMounted(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      try {
+        // Merge so newly added keys keep their default if absent from storage.
+        indicators.value = { ...defaults(), ...JSON.parse(stored) }
+      } catch {
+        indicators.value = defaults()
+      }
+    }
   })
+
+  watch(
+    indicators,
+    (val) => {
+      if (import.meta.client) localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+    },
+    { deep: true },
+  )
+
   return { indicators }
 }

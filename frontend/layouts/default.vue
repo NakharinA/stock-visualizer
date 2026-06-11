@@ -1,33 +1,74 @@
 <script setup lang="ts">
-const navItems = [
-  { label: 'Dashboard', to: '/', exact: true },
-  { label: 'Stock', to: '/stock', exact: false },
-  { label: 'Overview', to: '/overview', exact: false },
-]
+import type { OverviewItem } from '~/types/api'
+import { fmtPrice, fmtPct } from '~/utils/format'
+import { INDEX_SYMBOLS } from '~/utils/symbols'
+
+const route = useRoute()
+const { fetchOverview } = useStockApi()
+
+const lastSymbol = ref('AAPL')
+onMounted(() => {
+  lastSymbol.value = localStorage.getItem('sv.last') || 'AAPL'
+})
+
+const navItems = computed(() => [
+  { key: 'dashboard', icon: 'dashboard', label: 'Dashboard', to: '/', active: route.path === '/' },
+  { key: 'chart', icon: 'chart', label: 'Chart', to: `/stock/${lastSymbol.value}`, active: route.path.startsWith('/stock') },
+  { key: 'overview', icon: 'table', label: 'Watchlist', to: '/overview', active: route.path.startsWith('/overview') },
+])
+
+// Topbar index chips (SPY / QQQ) — live quotes from the overview endpoint.
+const indices = ref<OverviewItem[]>([])
+onMounted(async () => {
+  try {
+    indices.value = await fetchOverview(INDEX_SYMBOLS)
+  } catch {
+    indices.value = []
+  }
+})
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-gray-950 text-gray-100">
-    <aside class="w-56 shrink-0 border-r border-gray-800 flex flex-col">
-      <div class="px-4 py-5 border-b border-gray-800">
-        <span class="text-white font-semibold text-base tracking-tight">StockViz</span>
-      </div>
-      <nav class="flex-1 p-3 flex flex-col gap-1">
-        <NuxtLink
+  <div class="app">
+    <aside class="sidebar">
+      <button class="brand" aria-label="Ticker home" @click="navigateTo('/')">
+        <span class="brand-mark"><UiAppIcon name="bolt" :size="18" :weight="2" /></span>
+        <span class="brand-tx">Ticker</span>
+      </button>
+      <nav class="nav">
+        <button
           v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800/60 transition-colors"
-          :exact-active-class="item.exact ? 'text-white bg-gray-800' : ''"
-          :active-class="!item.exact ? 'text-white bg-gray-800' : ''"
+          :key="item.key"
+          class="nav-i"
+          :class="{ active: item.active }"
+          @click="navigateTo(item.to)"
         >
-          {{ item.label }}
-        </NuxtLink>
+          <UiAppIcon :name="item.icon" :size="20" />
+          <span>{{ item.label }}</span>
+        </button>
       </nav>
+      <div class="side-foot"><span class="dot-sim" />live</div>
     </aside>
 
-    <main class="flex-1 overflow-auto min-h-screen">
-      <slot />
-    </main>
+    <div class="main">
+      <header class="topbar">
+        <TopbarSearch />
+        <div class="idx-chips">
+          <button
+            v-for="r in indices"
+            :key="r.symbol"
+            class="idx-chip"
+            @click="navigateTo(`/stock/${r.symbol}`)"
+          >
+            <span class="ic-sym">{{ r.symbol }}</span>
+            <span class="ic-px mono">{{ fmtPrice(r.price) }}</span>
+            <span class="ic-pct" :class="r.diff_pct >= 0 ? 'up' : 'down'">{{ fmtPct(r.diff_pct) }}</span>
+          </button>
+        </div>
+      </header>
+      <main class="content">
+        <slot />
+      </main>
+    </div>
   </div>
 </template>
