@@ -14,12 +14,14 @@ export default defineNuxtConfig({
       ],
     },
   },
+  ssr: false,
   colorMode: {
     preference: 'dark',
     fallback: 'dark',
   },
   devtools: { enabled: false },
   nitro: {
+    preset: 'cloudflare-pages-static',
     devProxy: {
       '/api': { target: process.env.BACKEND_URL ?? 'http://localhost:8000', changeOrigin: true },
     },
