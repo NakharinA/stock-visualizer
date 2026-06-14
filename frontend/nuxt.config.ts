@@ -22,9 +22,6 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   nitro: {
     preset: 'cloudflare-pages-static',
-    devProxy: {
-      '/api': { target: process.env.BACKEND_URL ?? 'http://localhost:8000', changeOrigin: true },
-    },
   },
   runtimeConfig: {
     public: {
