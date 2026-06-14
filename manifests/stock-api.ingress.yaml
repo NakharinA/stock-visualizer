@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stock-api
+  namespace: stock-visualizer
+  labels:
+    app: stock-api
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - stock-api.pueyleng.com
+      secretName: stock-api-tls
+  rules:
+    - host: stock-api.pueyleng.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stock-api
+                port:
+                  name: http
