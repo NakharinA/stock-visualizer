@@ -3,14 +3,8 @@ kind: Ingress
 metadata:
   name: stock-api
   namespace: pueyleng
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - stock-api.pueyleng.com
-      secretName: stock-api-tls
   rules:
     - host: stock-api.pueyleng.com
       http:
