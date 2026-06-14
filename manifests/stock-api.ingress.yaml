@@ -9,7 +9,7 @@ spec:
     - host: stock-api.pueyleng.com
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
