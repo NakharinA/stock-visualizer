@@ -2,9 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stock-api
-  namespace: stock-visualizer
-  labels:
-    app: stock-api
+  namespace: pueyleng
 spec:
   replicas: 1
   selector:

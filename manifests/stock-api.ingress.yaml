@@ -2,9 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: stock-api
-  namespace: stock-visualizer
-  labels:
-    app: stock-api
+  namespace: pueyleng
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
