@@ -6,6 +6,9 @@ from fastapi.responses import JSONResponse
 
 from routers import stock, overview, search
 
+# Get API prefix from environment (e.g., "/api" for production, "" for local)
+API_PREFIX = os.getenv("API_PREFIX", "")
+
 app = FastAPI(title="Stock Visualizer API")
 
 _origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
@@ -30,11 +33,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(stock.router)
-app.include_router(overview.router)
-app.include_router(search.router)
+app.include_router(stock.router, prefix=API_PREFIX)
+app.include_router(overview.router, prefix=API_PREFIX)
+app.include_router(search.router, prefix=API_PREFIX)
 
 
-@app.get("/health")
+@app.get(f"{API_PREFIX}/health")
 def health():
     return {"status": "ok"}

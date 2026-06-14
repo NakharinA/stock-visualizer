@@ -6,3 +6,5 @@ metadata:
 data:
   # Comma-separated list of allowed CORS origins (consumed by main.py)
   ALLOWED_ORIGINS: "https://stock.pueyleng.com"
+  # API prefix for all routes (e.g., "/api" in production, "" in local development)
+  API_PREFIX: "/api"

@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: stock-api
   namespace: pueyleng
+  annotations:
+    argocd.argoproj.io/sync-options: "Validate=false"
 spec:
   ingressClassName: nginx
   rules:
