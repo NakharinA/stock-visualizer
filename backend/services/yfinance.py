@@ -101,3 +101,47 @@ def search_symbols(query: str, limit: int = 8) -> list[dict]:
         if symbol:
             results.append({"symbol": symbol, "name": name})
     return results[:limit]
+
+
+def fetch_latest_value(symbol: str) -> dict:
+    """Fetch only the latest stock value for fastest response.
+
+    Optimized for speed by fetching minimal data (2 days to calculate change).
+    """
+    ticker = yf.Ticker(symbol)
+
+    # Fetch only 2 days of history for latest value + previous close
+    try:
+        hist = ticker.history(period="2d", auto_adjust=True)
+    except Exception as e:
+        logger.error("Could not fetch history for %s: %s", symbol, e)
+        raise ValueError(f"Failed to fetch data for symbol: {symbol}")
+
+    if hist.empty or "Close" not in hist:
+        raise ValueError(f"No data found for symbol: {symbol}")
+
+    # Get the latest row
+    latest = hist.iloc[-1]
+
+    # Calculate change if we have previous data
+    previous_close = None
+    change = None
+    change_percent = None
+    if len(hist) >= 2:
+        previous_close = float(hist["Close"].iloc[-2])
+        change = float(latest["Close"]) - previous_close
+        if previous_close != 0:
+            change_percent = (change / previous_close) * 100
+
+    return {
+        "symbol": symbol.upper(),
+        "time": latest.name.strftime("%Y-%m-%d %H:%M:%S"),
+        "open": float(latest["Open"]),
+        "high": float(latest["High"]),
+        "low": float(latest["Low"]),
+        "close": float(latest["Close"]),
+        "volume": float(latest["Volume"]) if latest["Volume"] == latest["Volume"] else 0.0,
+        "previous_close": previous_close,
+        "change": change,
+        "change_percent": change_percent,
+    }

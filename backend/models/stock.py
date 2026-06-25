@@ -57,3 +57,16 @@ class StockResponse(BaseModel):
     period: str
     ohlcv: list[OHLCVBar]
     indicators: IndicatorsData
+
+
+class LatestStockValue(BaseModel):
+    symbol: str
+    time: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    previous_close: float | None
+    change: float | None
+    change_percent: float | None

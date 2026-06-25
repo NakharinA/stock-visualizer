@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import stock, overview, search
+from routers import stock, overview, search, latest
 
 # Get API prefix from environment (e.g., "/api" for production, "" for local)
 API_PREFIX = os.getenv("API_PREFIX", "")
@@ -36,6 +36,7 @@ app.add_middleware(
 app.include_router(stock.router, prefix=API_PREFIX)
 app.include_router(overview.router, prefix=API_PREFIX)
 app.include_router(search.router, prefix=API_PREFIX)
+app.include_router(latest.router, prefix=API_PREFIX)
 
 
 @app.get(f"{API_PREFIX}/health")
